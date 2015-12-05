@@ -219,7 +219,7 @@ int DeletePossibleLines ()
 		while (i < BOARD_WIDTH_IN_BLOCKS)
 		{
 			blockType = BoardMatrix[i][j];
-		if (blockType != 0) break;
+		if (blockType == 0) break;
 			i++;
 		}
 
