@@ -16,8 +16,8 @@
 #define ESPL_StartByte 0xAA
 #define ESPL_StopByte 0x55
 
-#define dispMovSpeed	5
-
+//#define dispMovSpeed	5
+#define HORIZONTAL_CONTROL_MOVE_SPEED 4
 
 int mPosX, mPosY;				// Position of the piece that is falling down
 int mShape, mRotation;
@@ -162,7 +162,7 @@ static void drawTask() {
 		while (xQueueReceive(DrawQueue, &line, 0) == pdTRUE) {
 		 }
 		// draw to display
-		gdispClear(White);
+		gdispClear(Black);
 
 		//DrawShape (BOARD_WIDTH/2*BLOCK_SIZE, verticalMove*BLOCK_SIZE, 5, rotation);
 
@@ -230,6 +230,7 @@ void EXTI4_IRQHandler(void)
 	  }
 }
 
+int ButtonADelay = 0;
 
 /*External interrupt handler for Button A and Button C*/
 void EXTI9_5_IRQHandler(void)
@@ -243,22 +244,27 @@ void EXTI9_5_IRQHandler(void)
 	}
 	else if(EXTI_GetITStatus(EXTI_Line6) != RESET)
 	{
-		 delay(6);
+		// delay(6);
 		//if (GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)==0)
 
 
 		coord_t lastOrientation = 0;
 		boolean_t rotatePossible = true;
 
-
-		lastOrientation = Shape.shapeOrientation;
-		if(lastOrientation==3){
-			lastOrientation = 0;// if we have reached the max value roll it back to zero.
+		if(ButtonADelay==2){
+			ButtonADelay = 0;
+			lastOrientation = Shape.shapeOrientation;
+			if(lastOrientation==3){
+				lastOrientation = 0;// if we have reached the max value roll it back to zero.
+			}
+			else {
+				lastOrientation = lastOrientation + 1;	//increase the rotation.
+			}
+			rotatePossible = IsMoveMentPossible (Shape.x, Shape.y, Shape.shapeType, lastOrientation);
+		}else
+		{
+			++ButtonADelay;
 		}
-		else {
-			lastOrientation = lastOrientation + 1;	//increase the rotation.
-		}
-		rotatePossible = IsMoveMentPossible (Shape.x, Shape.y, Shape.shapeType, lastOrientation);
 
 		if(rotatePossible==true)//if rotation is possible then assign it to the new rotation
 		{
@@ -292,8 +298,8 @@ static void delay(unsigned int nCount)
 
 		coord_t lastX = 0;
 		boolean_t movePossible = true;
-		//coort_t lastY = 0;
-		//lastY = Shape.y;
+		int leftMove = 0;
+		int rightMove = 0;
 		lastX = Shape.x;
 
 
@@ -306,30 +312,40 @@ static void delay(unsigned int nCount)
 			lastX = Shape.x;
 			if(joystick_now.x > 150)
 			{
-				//if(lastX!=10){
+				if(rightMove==HORIZONTAL_CONTROL_MOVE_SPEED)
+				{
+					rightMove = 0;
 					lastX = lastX + 1;//if we have not reached the max value the increase.
-				//}
 				movePossible = IsMoveMentPossible (lastX, Shape.y, Shape.shapeType, Shape.shapeOrientation);
 				if(movePossible==true)
 					Shape.x = lastX;
+				}
+				else
+					++rightMove;
 			}
 			else if((joystick_now.x < 120))
 			{
-				//if(lastX!=0){
-					lastX = lastX - 1;//if we have not reached the min value then decrease.
-				//}
+
+				if(leftMove==HORIZONTAL_CONTROL_MOVE_SPEED)
+				{
+				leftMove = 0;
+				lastX = lastX - 1;//if we have not reached the min value then decrease.
 				movePossible = IsMoveMentPossible (lastX, Shape.y, Shape.shapeType, Shape.shapeOrientation);
 				if(movePossible==true)
 					Shape.x = lastX;
+				}else
+				{
+					++leftMove;
+				}
 			}
 
 			if(joystick_now.y > 135)
 			{
-				JoyStickVal.y_joy = JoyStickVal.y_joy + dispMovSpeed;
+
 			}
 			else if((joystick_now.y < 110))
 			{
-					JoyStickVal.y_joy = JoyStickVal.y_joy - dispMovSpeed;
+
 			}
 
 			// Send over UART
