@@ -20,7 +20,6 @@ extern char verticalMove;
 extern char rotation;
 extern int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
-int GetAPeiceFromTheShape(int pShape, int pRotation, int pX, int pY);
 void DrawShapeWithHandle(shape_t * shape);
 void DrawBoardMatrix();
 

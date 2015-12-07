@@ -9,40 +9,9 @@
  */
 
 #include "Draw.h"
-#include "Shape.h"
 
 
 int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
-
-/*------------------------------------Define the container that holds the shapes------------------------*/
-
-char *ShapeContainer[] = {&ShapeSquare,&ShapeI,&ShapeL,&ShapeLmirrored,&ShapeN,&ShapeNmirroed, &ShapeT};
-
-/*------------------------------------Create A container that holds the shapes------------------------*/
-
-
-/*-----------------------------------------------------------------------------------------------------
- * int pShape => The shape (0 to 6)
- * int pRotation => The orientation Matrix of the Shape
- * int pX => The Shape matrix
- * int pY => The Shape element
- *----------------------------------------------------------------------------------------------------*/
-int GetAPeiceFromTheShape (int pShape, int pRotation, int pX, int pY)
-{
-	/*This function pulls a single piece from the shape requested
-	 *The Array of pointers holds all the shapes. The shapes are multidimentional arrays
-	 *and they are normally stored in a contigous manner in memory.
-	 *This function works by returning the start address of a particular shape.
-	 *
-	 *Then the constant 25 is multiplied with the pRotation and it creates the offset to select the correct rotation array.
-	 *The constant 5 is multiplied with pX to create the correct offset for the shape matrix.
-	 *The variable pY simple represent the Piece of the shape that we are interested in.
-	 *This is simple the element of the last array.
-	 * */
-
-	return *(ShapeContainer[pShape]+(pRotation*25)+(pX*5)+pY);
-}
-/*------------------------------------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------------------------------------
  * This function clears the board Matrix by initializing all elements to 0
