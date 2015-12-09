@@ -24,6 +24,9 @@ int mShape, mRotation;
 int mNextPosX, mNextPosY;		// Position of the next piece
 int mNextShape, mNextRotation;	// Kind and rotation of the next piece
 
+int debounce = 0; //Restricts the execution of the IRQ_handler if the debouncing time hasn't expired
+TimerHandle_t xTimers; //Define the debouncing timer
+
 static void delay(unsigned int nCount);
 
 
@@ -65,6 +68,8 @@ int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
 
+	//Debouncing timer initialization
+	timerInit();
 
 	CreateNewShape();
 	UpdateShape();
@@ -235,24 +240,22 @@ int ButtonADelay = 0;
 /*External interrupt handler for Button A and Button C*/
 void EXTI9_5_IRQHandler(void)
 {
-	if(EXTI_GetITStatus(EXTI_Line5) != RESET)
-	{
-		 delay(6);//debounce
-		if (GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C)==0)
-		btnCCount++;
-		EXTI_ClearITPendingBit(EXTI_Line5);
-	}
-	else if(EXTI_GetITStatus(EXTI_Line6) != RESET)
-	{
-		// delay(6);
-		//if (GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)==0)
+	timerStart(); //Reset the debouncing timer
 
+	if(debounce == 0){
+		if(EXTI_GetITStatus(EXTI_Line5) != RESET)
+		{
+			if (GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C)==0)
+			btnCCount++;
+			debounce = 1;
+			EXTI_ClearITPendingBit(EXTI_Line5);
+		}
+		else if(EXTI_GetITStatus(EXTI_Line6) != RESET)
+		{
+			//if (GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)==0)
 
-		coord_t lastOrientation = 0;
-		boolean_t rotatePossible = true;
-
-		if(ButtonADelay==2){
-			ButtonADelay = 0;
+			coord_t lastOrientation = 0;
+			boolean_t rotatePossible = true;
 			lastOrientation = Shape.shapeOrientation;
 			if(lastOrientation==3){
 				lastOrientation = 0;// if we have reached the max value roll it back to zero.
@@ -261,17 +264,15 @@ void EXTI9_5_IRQHandler(void)
 				lastOrientation = lastOrientation + 1;	//increase the rotation.
 			}
 			rotatePossible = IsMoveMentPossible (Shape.x, Shape.y, Shape.shapeType, lastOrientation);
-		}else
-		{
-			++ButtonADelay;
-		}
 
-		if(rotatePossible==true)//if rotation is possible then assign it to the new rotation
-		{
-			Shape.shapeOrientation = lastOrientation;
+			if(rotatePossible==true)//if rotation is possible then assign it to the new rotation
+			{
+				Shape.shapeOrientation = lastOrientation;
+			}
+			debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires
 		}
-		EXTI_ClearITPendingBit(EXTI_Line6);
 	}
+	EXTI_ClearITPendingBit(EXTI_Line6);
 }
 
 static void delay(unsigned int nCount)
@@ -354,6 +355,33 @@ static void delay(unsigned int nCount)
 			vTaskDelayUntil(&xLastWakeTime, 20);
 		}
 	}
+
+/*************************BUTTON DEBOUNCING TIMER FUNCTIONS**************************************/
+//Function executed when the debounce timer expires
+void vTimerCallback(TimerHandle_t pxTimer){
+	//Allow the next button interruption
+	debounce = 0;
+
+	//Stop the timer
+	xTimerStop(pxTimer, 0);
+}
+
+//Debounce timer setup
+void timerInit(){
+	//Software timer to debounce the button
+	xTimers = xTimerCreate("timer", 30 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);  //It overflows in 10ms and then it calls the vTimerCallback
+
+	xTimerStart(xTimers, 0);
+	xTimerStop(xTimers, 0);
+
+}
+
+void timerStart(){
+	//Reset the timer
+	xTimerReset(xTimers, 0);
+}
+
+
 
 /**
  * Example function to send data over UART
