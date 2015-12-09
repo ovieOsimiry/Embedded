@@ -298,11 +298,14 @@ static void delay(unsigned int nCount)
 
 
 		coord_t lastX = 0;
+		coord_t lastY = 0;
 		boolean_t movePossible = true;
+		shape_t * _shape = &Shape;
+		boolean_t speedGaurd = false;
 		int leftMove = 0;
 		int rightMove = 0;
 		lastX = Shape.x;
-
+		boolean_t downMovePossible = true;
 
 		while (TRUE) {
 			// Remember last joystick values
@@ -342,11 +345,35 @@ static void delay(unsigned int nCount)
 
 			if(joystick_now.y > 135)
 			{
-
+				if(speedGaurd==true)
+				{
+					lastY = _shape->y;
+					downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
+					if(downMovePossible==true)
+					{
+						if (_shape->y==20)
+							_shape->y = 0;
+						else
+							_shape->y+=1;
+					}
+					else
+					{
+						speedGaurd=false;
+						StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
+						Score_NumberOfLinesCompleted = DeletePossibleLines();
+						CreateNewShape();
+						UpdateShape();
+					}
+				}
 			}
 			else if((joystick_now.y < 110))
 			{
 
+
+			}
+			else
+			{
+				speedGaurd=true;
 			}
 
 			// Send over UART
