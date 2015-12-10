@@ -84,6 +84,39 @@ void DrawBoardMatrix()
 	}
 }
 
+void DrawMainMenu()
+{
+	char str[100]; // Init buffer for message
+	gdispClear(Black);
+
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans32*");
+
+	sprintf(str, "TETRIS");
+	gdispDrawString(30, 5, str, font1, White);
+
+	if(getState()==1)
+	{
+		sprintf(str, "->");
+		gdispDrawString(20, 30, str, font1, White);
+	}
+	if(getState()==2)
+	{
+		sprintf(str, "->");
+		gdispDrawString(20, 60, str, font1, White);
+	}
+
+	sprintf(str, "Player 1");
+	gdispDrawString(30, 30, str, font1, White);
+
+	sprintf(str, "Player 2");
+	gdispDrawString(30, 60, str, font1, White);
+
+	sprintf(str, "Select an option and then press button B");
+	gdispDrawString(30, 120, str, font1, White);
+
+}
+
 
 color_t GetColor(char color)
 {

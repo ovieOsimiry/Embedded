@@ -10,6 +10,7 @@
 #include "includes.h"
 #include "Draw.h"
 #include "Shape.h"
+#include "Election.h"
 
 
 // start and stop bytes for the UART protocol
@@ -63,16 +64,13 @@ QueueHandle_t DrawQueue;
 shape_t Shape;
 int Score_NumberOfLinesCompleted = 0;
 
-
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
 
 	//Debouncing timer initialization
 	timerInit();
-
-	CreateNewShape();
-	UpdateShape();
+	startState();
 
 
 	// Initializes Draw Queue with 100 lines buffer
@@ -86,6 +84,7 @@ int main() {
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
 }
+
 
 
 void CreateNewShape()
@@ -111,12 +110,14 @@ void UpdateShape(){
 
 static void GamePlay()
 {
+	CreateNewShape();
+	UpdateShape();
 	shape_t * _shape = &Shape;
 	coord_t lastY = 0;
 	boolean_t downMovePossible = true;
 	int tick = 0;
-	while(1){
 
+	while(1){
 		vTaskDelay(10);
 
 		if(tick==100)
@@ -143,7 +144,9 @@ static void GamePlay()
 			}
 
 		}
+
 	}
+
 }
 
 
@@ -156,9 +159,10 @@ static void drawTask() {
 	struct line line; // Init buffer for line
 
 	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans24*");
+	font1 = gdispOpenFont("DejaVuSans32*");
 	InitializeBoardMatrix();
 	gdispClear(White);
+
 
 
 	// Start endless loop
@@ -171,9 +175,14 @@ static void drawTask() {
 
 		//DrawShape (BOARD_WIDTH/2*BLOCK_SIZE, verticalMove*BLOCK_SIZE, 5, rotation);
 
-
-		DrawShapeWithHandle(&Shape);
-		DrawBoardMatrix();
+		if(getState()==1||getState()==2)
+		{
+			DrawMainMenu();
+		}
+		else {
+			DrawShapeWithHandle(&Shape);
+			DrawBoardMatrix();
+		}
 
 		// Wait for display to stop writing
 		xSemaphoreTake(ESPL_DisplayReady, 0);
@@ -227,8 +236,22 @@ void EXTI4_IRQHandler(void)
 		 delay(6);//debounce
 		if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
 		{
-			btnBCount++;
-			gbLeftRight = gbLeftRight + 10;
+			if(getState()==1||getState()==2)
+			{
+				if(getState()==1)
+				{
+					setState(3);
+				}
+				if(getState()==2)
+				{
+					setState(4);
+				}
+			}
+			else {
+				btnBCount++;
+				gbLeftRight = gbLeftRight + 10;
+			}
+
 		}
 		/* Clear the EXTI line 0 pending bit */
 		EXTI_ClearITPendingBit(EXTI_Line4);
@@ -345,31 +368,40 @@ static void delay(unsigned int nCount)
 
 			if(joystick_now.y > 135)
 			{
-				if(speedGaurd==true)
+				if(getState()==1||getState()==2) // Main menu
 				{
-					lastY = _shape->y;
-					downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
-					if(downMovePossible==true)
+					setState(2);
+				}
+				else {
+					if(speedGaurd==true)
 					{
-						if (_shape->y==20)
+						lastY = _shape->y;
+						downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
+						if(downMovePossible==true)
+						{
+							if (_shape->y==20)
 							_shape->y = 0;
-						else
+							else
 							_shape->y+=1;
-					}
-					else
-					{
-						speedGaurd=false;
-						StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-						Score_NumberOfLinesCompleted = DeletePossibleLines();
-						CreateNewShape();
-						UpdateShape();
+						}
+						else
+						{
+							speedGaurd=false;
+							StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
+							Score_NumberOfLinesCompleted = DeletePossibleLines();
+							CreateNewShape();
+							UpdateShape();
+						}
 					}
 				}
+
 			}
 			else if((joystick_now.y < 110))
 			{
-
-
+				if(getState()==1||getState()==2) // Main menu
+				{
+					setState(1);
+				}
 			}
 			else
 			{
