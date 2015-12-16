@@ -17,7 +17,6 @@ void startState(){
 int getState(){
 	return state;
 }
-
 void setState(int state1){
 	state = state1;
 }

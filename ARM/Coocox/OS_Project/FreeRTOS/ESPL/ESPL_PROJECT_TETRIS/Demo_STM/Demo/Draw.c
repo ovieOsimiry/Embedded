@@ -45,7 +45,7 @@ void DrawShapeWithHandle(shape_t * shape)
 				case 1: mColor = Red; break;	// For each block of the piece except the pivot
 				case 2: mColor = Yellow; break;	// For the pivot
 				case 3: mColor = Green; break;	// For the pivot
-				case 4: mColor = Blue; break;	// For the pivot
+				case 4: mColor = Orange; break;	// For the pivot
 			}
 
 			if (GetAPeiceFromTheShape (shape->shapeType, shape->shapeOrientation, j, i) != 0)
@@ -55,10 +55,33 @@ void DrawShapeWithHandle(shape_t * shape)
 	}
 }
 
-
-void DrawBoardMatrix()
+//Draws next block to be playable into the <next> box
+void DrawNextShape(int type, int orientation)
 {
+	color_t mColor;				// Color of the block
+	for (int i = 0; i < SHAPE_MATRIX_DIMENSION; i++)
+	{
+		for (int j = 0; j < SHAPE_MATRIX_DIMENSION; j++)
+		{
+			// Get the type of the block and draw it with the correct color
+			switch (GetAPeiceFromTheShape (type, orientation, j, i))
+			{
+				case 1: mColor = Red; break;	// For each block of the piece except the pivot
+				case 2: mColor = Yellow; break;	// For the pivot
+				case 3: mColor = Green; break;	// For the pivot
+				case 4: mColor = Orange; break;	// For the pivot
+			}
 
+			if (GetAPeiceFromTheShape (type, orientation, j, i) != 0)
+			gdispFillArea(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+175,BLOCK_SIZE,BLOCK_SIZE,mColor);
+		}
+	}
+}
+void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int level)
+{
+	char str[100]; // Init buffer for message
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans32*");
 	char blockType = 0;
 	int mX1 = 0;
 	int mX2 = BOARD_WIDTH;
@@ -82,6 +105,44 @@ void DrawBoardMatrix()
 
 		}
 	}
+
+    gdispFillArea(170+30-5, 0+20-10 , 100+10,30+10, Blue);
+    gdispFillArea(170+30-5, 0+70-10 , 100+10,30+10, Blue);
+    gdispFillArea(170+30-5, 0+120-10 , 100+10,30+10, Blue);
+    gdispFillArea(170+30-5, 0+170-10 , 100+10,60+10, Blue);
+
+    gdispFillArea(170+30, 0+20-5 , 100,30, Black);
+    gdispFillArea(170+30, 0+70-5 , 100,30, Black);
+    gdispFillArea(170+30, 0+120-5 , 100,30, Black);
+    gdispFillArea(170+30, 0+170-5 , 100,60, Black);
+
+    sprintf(str, "Score");
+    // Print string
+    gdispDrawString(170+30, 0+20-5, str, font1, White);
+
+    sprintf(str, "%d",score);
+    gdispDrawString(170+80, 0+30, str, font1, White);
+
+    sprintf(str, "Level");
+    // Print string
+    gdispDrawString(170+30, 0+70-5, str, font1, White);
+
+    sprintf(str, "%d",level);
+        gdispDrawString(170+80, 0+80, str, font1, White);
+
+    sprintf(str, "Lines");
+    // Print string
+    gdispDrawString(170+30, 0+120-5, str, font1, White);
+
+    sprintf(str, "%d",lines);
+    gdispDrawString(170+80, 0+130, str, font1, White);
+
+    sprintf(str, "Next");
+    // Print string
+    gdispDrawString(170+30, 0+170-5, str, font1, White);
+
+    DrawNextShape(nextShape,nextRotation);
+
 }
 
 void DrawMainMenu()
@@ -94,6 +155,7 @@ void DrawMainMenu()
 
 	sprintf(str, "TETRIS");
 	gdispDrawString(30, 5, str, font1, White);
+
 
 	if(getState()==1)
 	{
@@ -135,7 +197,7 @@ color_t GetColor(char color)
 		return Green;
 
 		case 4:
-		return Blue;
+		return Orange;
 
 		default:
 			return White;

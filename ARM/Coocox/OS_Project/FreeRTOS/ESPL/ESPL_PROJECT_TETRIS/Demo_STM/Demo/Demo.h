@@ -31,3 +31,4 @@ static void GamePlay();
 void CreateNewPiece();
 void UpdateShape();
 void VApplicationIdleHook();
+static void levelTask();

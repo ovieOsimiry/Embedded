@@ -63,6 +63,9 @@ QueueHandle_t DrawQueue;
 
 shape_t Shape;
 int Score_NumberOfLinesCompleted = 0;
+int Score_Score = 0;
+int Score_Level = 0;
+int tick = 0;
 
 int main() {
 	// Initialize Board functions
@@ -70,6 +73,8 @@ int main() {
 
 	//Debouncing timer initialization
 	timerInit();
+
+	//Initialites states of the game
 	startState();
 
 
@@ -81,6 +86,8 @@ int main() {
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
 	xTaskCreate(GamePlay, "GamePlay", 500, NULL, 3, NULL);
+	xTaskCreate(levelTask, "levelTask", 500, NULL, 3, NULL);
+
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
 }
@@ -110,40 +117,42 @@ void UpdateShape(){
 
 static void GamePlay()
 {
-	CreateNewShape();
-	UpdateShape();
 	shape_t * _shape = &Shape;
 	coord_t lastY = 0;
+	CreateNewShape();
+	UpdateShape();
 	boolean_t downMovePossible = true;
-	int tick = 0;
+
+	int temp = 0;
 
 	while(1){
-		vTaskDelay(10);
-
-		if(tick==100)
-			tick = 0;
-		else
-			tick++;
-
-		if(tick==100){
-		lastY = _shape->y;
-			downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
-			if(downMovePossible==true)
-			{
-				if (_shape->y==20)
-					_shape->y = 0;
-				else
-					_shape->y+=1;
-			}
+			vTaskDelay(10);
+			if(tick==100/(Score_Level+1))
+				tick = 0;
 			else
-			{
-				StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-				Score_NumberOfLinesCompleted = DeletePossibleLines();
-				CreateNewShape();
-				UpdateShape();
-			}
+				tick++;
 
-		}
+			if(tick==100/(Score_Level+1) && getState()==3){
+			lastY = _shape->y;
+				downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
+				if(downMovePossible==true)
+				{
+					if (_shape->y==20)
+						_shape->y = 0;
+					else
+						_shape->y+=1;
+				}
+				else
+				{
+					StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
+					temp = DeletePossibleLines();
+					Score_NumberOfLinesCompleted += temp;
+					Score_Score+=calculateScore(Score_Level,temp);
+					CreateNewShape();
+					UpdateShape();
+				}
+
+			}
 
 	}
 
@@ -181,7 +190,7 @@ static void drawTask() {
 		}
 		else {
 			DrawShapeWithHandle(&Shape);
-			DrawBoardMatrix();
+			DrawBoardMatrix(mNextShape,mNextRotation,Score_NumberOfLinesCompleted,Score_Score,Score_Level);
 		}
 
 		// Wait for display to stop writing
@@ -193,8 +202,35 @@ static void drawTask() {
 	}
 }
 
+static void levelTask(){
+	while(TRUE){
+		vTaskDelay(10000);
+		if(Score_Level<9)
+		{
+			Score_Level++;
+			tick=0;
+		}
+	}
+}
 
+int calculateScore(int level, int lines)
+{
+	switch(lines){
+		case 0:
+			return 0;
+		case 1:
+			return 40*(level+1);
+		case 2:
+			return 100*(level+1);
+		case 3:
+			return 300*(level+1);
+		case 4:
+			return 1200*(level+1);
+		default: //more than 4 lines
+			return 1200*(level+1)+(lines-4)*40*(level+1);
 
+	}
+}
 /*External interrupt handler for Button E*/
 
 void EXTI0_IRQHandler(void)//Button E interrupt handler
@@ -329,6 +365,7 @@ static void delay(unsigned int nCount)
 		int rightMove = 0;
 		lastX = Shape.x;
 		boolean_t downMovePossible = true;
+		int temp = 0;
 
 		while (TRUE) {
 			// Remember last joystick values
@@ -388,7 +425,9 @@ static void delay(unsigned int nCount)
 						{
 							speedGaurd=false;
 							StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-							Score_NumberOfLinesCompleted = DeletePossibleLines();
+							temp = DeletePossibleLines();
+							Score_NumberOfLinesCompleted += temp;
+							Score_Score+=calculateScore(Score_Level,temp);
 							CreateNewShape();
 							UpdateShape();
 						}
@@ -428,7 +467,7 @@ void vTimerCallback(TimerHandle_t pxTimer){
 //Debounce timer setup
 void timerInit(){
 	//Software timer to debounce the button
-	xTimers = xTimerCreate("timer", 30 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);  //It overflows in 10ms and then it calls the vTimerCallback
+	xTimers = xTimerCreate("timer", 200 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);  //It overflows in 10ms and then it calls the vTimerCallback
 
 	xTimerStart(xTimers, 0);
 	xTimerStop(xTimers, 0);
