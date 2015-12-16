@@ -11,7 +11,7 @@
 #define BOARD_WIDTH_IN_BLOCKS 10	// Board width in blocks
 #define BOARD_HEIGHT_IN_BLOCKS 20
 #define BOARD_OFFSET_Y_AXIS 11		//This is used to allign the display with the board Grid which is set to 10 by 20.
-#define BOARD_OFFSET_X_AXIS 0		//This is used to allign the display with the board Grid which is set to 10 by 20.
+#define BOARD_OFFSET_X_AXIS 45		//This is used to allign the display with the board Grid which is set to 10 by 20.
 #define BLOCK_SIZE 11
 #define SHAPE_MATRIX_DIMENSION 5
 
