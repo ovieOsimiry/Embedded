@@ -17,7 +17,6 @@
 #define ESPL_StartByte 0xAA
 #define ESPL_StopByte 0x55
 
-//#define dispMovSpeed	5
 #define HORIZONTAL_CONTROL_MOVE_SPEED 4
 
 int mPosX, mPosY;				// Position of the piece that is falling down
@@ -26,21 +25,11 @@ int mNextPosX, mNextPosY;		// Position of the next piece
 int mNextShape, mNextRotation;	// Kind and rotation of the next piece
 
 int debounce = 0; //Restricts the execution of the IRQ_handler if the debouncing time hasn't expired
-TimerHandle_t xTimers; //Define the debouncing timer
-
-static void delay(unsigned int nCount);
 
 
 QueueHandle_t ESPL_RxQueue; // Already defined in ESPL_Functions.h
 SemaphoreHandle_t ESPL_DisplayReady;
 
-
-static int btnACount = 0;
-static int btnBCount = 0;
-static int btnCCount = 0;
-static int btnDCount = 0;
-static int btnECount = 0;
-static volatile signed int gbLeftRight = 0;
 
 extern char verticalMove;
 extern char rotation;
@@ -55,22 +44,40 @@ JoyStickCord_t JoyStickVal = {0,0};
 // Stores lines to be drawn
 QueueHandle_t DrawQueue;
 
+
+/*-----------------Please put all shared global variables here------------------------*/
+
+shape_t Shape;
+int gNumberOfLinesCompleted = 0;
+int gGameScore = 0;
+int gDifficultyLevel;
+joystickselection_t gjoyStickSelection = JoyStickNoSelection;
+bool_t gSelectButtonPressed = false;
+
+/*------------------------------------------------------------------------------------*/
+
+
+/*--------------------------RTOS related definitions----------------------------------*/
+
+/*------------------------------Semaphores/Mutexs-------------------------------------*/
+
+SemaphoreHandle_t xNewShapeCreationMutex;
+
+/*---------------------------------------Timers---------------------------------------*/
+TimerHandle_t xTimers; //Define the de-bouncing timer
+/*------------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------------*/
+
 /**
  * Entry function to the example program.
  * Initializes hardware and software.
  * Starts scheduler.
  */
-
-shape_t Shape;
-int Score_NumberOfLinesCompleted = 0;
-int Score_Score = 0;
-int Score_Level = 0;
-int tick = 0;
-
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
-
+	xNewShapeCreationMutex = xSemaphoreCreateMutex();
 	//Debouncing timer initialization
 	timerInit();
 
@@ -86,7 +93,7 @@ int main() {
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
 	xTaskCreate(GamePlay, "GamePlay", 500, NULL, 3, NULL);
-	xTaskCreate(levelTask, "levelTask", 500, NULL, 3, NULL);
+	xTaskCreate(SystemState, "SystemState", 500, NULL, 3, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -115,47 +122,120 @@ void UpdateShape(){
 }
 
 
-static void GamePlay()
+static void SystemState()
 {
-	shape_t * _shape = &Shape;
-	coord_t lastY = 0;
-	CreateNewShape();
-	UpdateShape();
-	boolean_t downMovePossible = true;
+	while(1)
+	{
 
-	int temp = 0;
+			switch(getState())
+			{
+				case 1:
+					if(gjoyStickSelection==JoyStickUp) setState(1);
+					else if(gjoyStickSelection==JoyStickDown) setState(2);
+					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+				break;
 
-	while(1){
-			vTaskDelay(10);
-			if(tick==100/(Score_Level+1))
-				tick = 0;
-			else
-				tick++;
+				case 2:
+					if(gjoyStickSelection==JoyStickDown) setState(2);
+					else if(gjoyStickSelection==JoyStickUp) setState(1);
+					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+				break;
 
-			if(tick==100/(Score_Level+1) && getState()==3){
-			lastY = _shape->y;
-				downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
-				if(downMovePossible==true)
-				{
-					if (_shape->y==20)
-						_shape->y = 0;
-					else
-						_shape->y+=1;
-				}
-				else
-				{
-					StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-					temp = DeletePossibleLines();
-					Score_NumberOfLinesCompleted += temp;
-					Score_Score+=calculateScore(Score_Level,temp);
-					CreateNewShape();
-					UpdateShape();
-				}
+				case 3:
+					gSelectButtonPressed = 0;
+				break;
+
+				case 7:
+					if(gSelectButtonPressed && gjoyStickSelection==JoyStickUp) {setState(3); gSelectButtonPressed = 0;}
+					if(gSelectButtonPressed && gjoyStickSelection==JoyStickDown) {setState(1); gSelectButtonPressed = 0;}
 
 			}
 
+			vTaskDelay(100);
 	}
+}
 
+static void GamePlay()
+{
+
+		shape_t * _shape = &Shape;
+		coord_t lastY = 0;
+		const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
+		const int MAX_DIFFICULTY_LEVEL = 10;
+		const char MAX_TICK = 100;
+		const NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 1;
+		int tick = 0;
+		unsigned int difficulty_check_point = NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
+		boolean_t downMovePossible = true;
+		int temp = 0;
+
+		CreateNewShape();
+		UpdateShape();
+
+/*--------Initialise global variables used within this task----------------*/
+
+		gDifficultyLevel = 0;
+
+/*-------------------------------------------------------------------------*/
+
+	while(1){
+				vTaskDelay(10);
+				if(gNumberOfLinesCompleted >= difficulty_check_point)
+				{
+					difficulty_check_point = difficulty_check_point + (30/(gDifficultyLevel+1));
+					if(gDifficultyLevel!=MAX_DIFFICULTY_LEVEL)
+					 ++gDifficultyLevel;
+				}
+
+				if(tick >=(MAX_TICK/(gDifficultyLevel+1)))
+					tick = 0;
+				else
+					tick++;
+
+			if(tick==(MAX_TICK/(gDifficultyLevel+1)) && getState()==3)
+				{
+					lastY = _shape->y;
+					downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
+					if(downMovePossible==true)
+					{
+						if (_shape->y==20)
+							_shape->y = 0;
+						else
+							_shape->y+=1;
+					}
+					else
+					{
+						StoreShape(_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
+						temp = DeletePossibleLines();
+						gNumberOfLinesCompleted += temp;
+						gGameScore+=calculateScore(gDifficultyLevel,temp);
+						if(!isGameOver())
+							{
+								if( xNewShapeCreationMutex != NULL )
+									{
+									//Since the shape can be updated from another task, we try to take mutex before updating shape
+									//if we wait for mutex to become available for at most 1 tick, and it is not available then we don't
+									//bother to update shape because the other task must have already done so.
+									if( xSemaphoreTake( xNewShapeCreationMutex, ( TickType_t )1) == pdTRUE )
+										{
+											CreateNewShape();
+											UpdateShape();
+											xSemaphoreGive( xNewShapeCreationMutex );
+										}
+									}
+							}
+						else
+						 {
+							setState(7);
+						 }
+					}
+
+				}
+			else if(getState()==7)
+			{
+				InitializeBoardMatrix();
+			}
+		}
 }
 
 
@@ -188,9 +268,13 @@ static void drawTask() {
 		{
 			DrawMainMenu();
 		}
-		else {
+		else if(getState()==3) {
 			DrawShapeWithHandle(&Shape);
-			DrawBoardMatrix(mNextShape,mNextRotation,Score_NumberOfLinesCompleted,Score_Score,Score_Level);
+			DrawBoardMatrix(mNextShape,mNextRotation,gNumberOfLinesCompleted,gGameScore,gDifficultyLevel);
+		}
+		else if(getState()==7)
+		{
+			DrawGameOver(&gjoyStickSelection);
 		}
 
 		// Wait for display to stop writing
@@ -199,17 +283,6 @@ static void drawTask() {
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
 		// swap buffers
 		ESPL_DrawLayer();
-	}
-}
-
-static void levelTask(){
-	while(TRUE){
-		vTaskDelay(10000);
-		if(Score_Level<9)
-		{
-			Score_Level++;
-			tick=0;
-		}
 	}
 }
 
@@ -238,9 +311,7 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
   if(EXTI_GetITStatus(EXTI_Line0) != RESET)
   {
     /* Button E will Reset all counters */
-	  delay(6);//debounce
 	  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0)
-		  btnACount = 0; btnBCount = 0; btnCCount = 0; btnDCount = 0;
     /* Clear the EXTI line 0 pending bit */
     EXTI_ClearITPendingBit(EXTI_Line0);
   }
@@ -251,12 +322,9 @@ void EXTI2_IRQHandler(void)//Button D interrupt handler
 {
 	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
 	  {
-	    /* Increase count for button D */
-		 delay(6);//debounce
 		if (GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D)==0)
 		{
-			btnDCount++;
-			gbLeftRight = gbLeftRight - 10;
+
 		}
 	    /* Clear the EXTI line 0 pending bit */
 	    EXTI_ClearITPendingBit(EXTI_Line2);
@@ -266,35 +334,38 @@ void EXTI2_IRQHandler(void)//Button D interrupt handler
 /*External interrupt handler for Button B*/
 void EXTI4_IRQHandler(void)
 {
-	if(EXTI_GetITStatus(EXTI_Line4) != RESET)
-	  {
-		/* Increase count for button D */
-		 delay(6);//debounce
-		if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
-		{
-			if(getState()==1||getState()==2)
-			{
-				if(getState()==1)
-				{
-					setState(3);
-				}
-				if(getState()==2)
-				{
-					setState(4);
-				}
-			}
-			else {
-				btnBCount++;
-				gbLeftRight = gbLeftRight + 10;
-			}
 
-		}
-		/* Clear the EXTI line 0 pending bit */
-		EXTI_ClearITPendingBit(EXTI_Line4);
-	  }
+	timerStart();
+	if(debounce == 0)
+	 {
+		if(EXTI_GetITStatus(EXTI_Line4) != RESET)
+		{
+			/* Increase count for button D */
+			debounce == 1;
+			if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
+			{
+	//			if(getState()==1||getState()==2)
+	//			{
+	//				if(getState()==1)
+	//				{
+	//					setState(3);
+	//				}
+	//				if(getState()==2)
+	//				{
+	//					setState(4);
+	//				}
+	//			}
+	//			else {
+	//			}
+				gSelectButtonPressed = 1;
+
+			}
+			/* Clear the EXTI line 0 pending bit */
+			}
+	}
+	EXTI_ClearITPendingBit(EXTI_Line4);
 }
 
-int ButtonADelay = 0;
 
 /*External interrupt handler for Button A and Button C*/
 void EXTI9_5_IRQHandler(void)
@@ -305,9 +376,8 @@ void EXTI9_5_IRQHandler(void)
 		if(EXTI_GetITStatus(EXTI_Line5) != RESET)
 		{
 			if (GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C)==0)
-			btnCCount++;
 			debounce = 1;
-			EXTI_ClearITPendingBit(EXTI_Line5);
+			//EXTI_ClearITPendingBit(EXTI_Line5);
 		}
 		else if(EXTI_GetITStatus(EXTI_Line6) != RESET)
 		{
@@ -332,22 +402,14 @@ void EXTI9_5_IRQHandler(void)
 		}
 	}
 	EXTI_ClearITPendingBit(EXTI_Line6);
-}
-
-static void delay(unsigned int nCount)
-{
-  unsigned int index = 0;
-  for(index = (100000 * nCount); index != 0; index--)
-  {
-  }
+	EXTI_ClearITPendingBit(EXTI_Line5);
 }
 
 
-
-	/**
-	 * This task polls the joystick value every 20 ticks
-	 */
-	static void checkJoystick() {
+/**
+ * This task polls the joystick value every 20 ticks
+ */
+static void checkJoystick() {
 		TickType_t xLastWakeTime;
 		xLastWakeTime = xTaskGetTickCount();
 		struct coord joystick_now = { 0, 0 }, joystick_last = { 0, 0 };
@@ -360,7 +422,7 @@ static void delay(unsigned int nCount)
 		coord_t lastY = 0;
 		boolean_t movePossible = true;
 		shape_t * _shape = &Shape;
-		boolean_t speedGaurd = false;
+		boolean_t shapeDownMovementSpeedGaurd = false;
 		int leftMove = 0;
 		int rightMove = 0;
 		lastX = Shape.x;
@@ -403,14 +465,11 @@ static void delay(unsigned int nCount)
 				}
 			}
 
-			if(joystick_now.y > 135)
+			if(joystick_now.y > 135) //Joy stick is moved downwards.
 			{
-				if(getState()==1||getState()==2) // Main menu
-				{
-					setState(2);
-				}
-				else {
-					if(speedGaurd==true)
+				gjoyStickSelection = JoyStickDown;
+				if(getState()==3) {
+					if(shapeDownMovementSpeedGaurd==true)//check guard to see if the shape has already touched the base of the board
 					{
 						lastY = _shape->y;
 						downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
@@ -423,28 +482,39 @@ static void delay(unsigned int nCount)
 						}
 						else
 						{
-							speedGaurd=false;
+							shapeDownMovementSpeedGaurd=false;//the shape has reached the bottom so we set the guard to false to prevent the next shape from droping fast until the joystick is released
 							StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
 							temp = DeletePossibleLines();
-							Score_NumberOfLinesCompleted += temp;
-							Score_Score+=calculateScore(Score_Level,temp);
-							CreateNewShape();
-							UpdateShape();
+							gNumberOfLinesCompleted += temp;
+							gGameScore+=calculateScore(gDifficultyLevel,temp);
+
+							if(!isGameOver())//check if the game is over.
+							{
+								if( xNewShapeCreationMutex != NULL )
+									{
+									//Since the shape can be updated from another task, we try to take mutex before updating shape
+									//if we wait for mutex to become available for at most 1 tick, and it is not available then we don't
+									//bother to update shape because the other task must have already done so.
+									if( xSemaphoreTake( xNewShapeCreationMutex, ( TickType_t )1) == pdTRUE )
+										{
+											CreateNewShape();
+											UpdateShape();
+											xSemaphoreGive( xNewShapeCreationMutex );
+										}
+									}
+							}
 						}
 					}
 				}
 
 			}
-			else if((joystick_now.y < 110))
+			else if((joystick_now.y < 110))//joystick moved upwards
 			{
-				if(getState()==1||getState()==2) // Main menu
-				{
-					setState(1);
-				}
+				gjoyStickSelection = JoyStickUp;
 			}
 			else
 			{
-				speedGaurd=true;
+				shapeDownMovementSpeedGaurd=true;
 			}
 
 			// Send over UART

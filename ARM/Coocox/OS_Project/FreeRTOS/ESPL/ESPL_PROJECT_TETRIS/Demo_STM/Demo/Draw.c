@@ -180,6 +180,40 @@ void DrawMainMenu()
 }
 
 
+void DrawGameOver(const joystickselection_t * joystickselection  )
+{
+	char str[100]; // Init buffer for message
+	gdispClear(Black);
+
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans32*");
+
+	sprintf(str, "GAME OVER");
+	gdispDrawString(140, 5, str, font1, White);
+
+
+	if(*joystickselection==JoyStickUp)
+	{
+		sprintf(str, "->");
+		gdispDrawString(20, 30, str, font1, White);
+	}
+	if(*joystickselection==JoyStickDown)
+	{
+		sprintf(str, "->");
+		gdispDrawString(20, 60, str, font1, White);
+	}
+
+	sprintf(str, "Restart");
+	gdispDrawString(30, 30, str, font1, White);
+
+	sprintf(str, "Main menu");
+	gdispDrawString(30, 60, str, font1, White);
+
+	sprintf(str, "Select an option and then press button B");
+	gdispDrawString(30, 120, str, font1, White);
+
+}
+
 color_t GetColor(char color)
 {
 	switch(color)
@@ -212,8 +246,8 @@ char GetPeiceType(int pX, int pY)
 
 boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
 {
-	// Checks collision with pieces already stored in the board or the board limits
-	// This is just to check the 5x5 blocks of a piece with the appropiate area in the board
+	// Checks collision with shapes already stored in the board or the board limits
+	// This is just to check the 5x5 blocks of a shape with the appropriate area in the board
 
 	boolean_t status = true;
 	int blocktype = 0;
@@ -228,7 +262,7 @@ boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
 					return 0;
 			}
 
-			// Check if the piece have collisioned with a block already stored in the map
+			// Check if the shape touching a shape already stored in the board
 			if (j1 >= 0)
 			{
 				status = GetPeiceType(i1, j1);
@@ -283,14 +317,27 @@ int DeletePossibleLines ()
 		while (i < BOARD_WIDTH_IN_BLOCKS)
 		{
 			blockType = BoardMatrix[i][j];
-		if (blockType == 0) break;
-			i++;
+			if (blockType == 0) break;
+				i++;
 		}
 
 		if (i == BOARD_WIDTH_IN_BLOCKS){
-			DeleteLine (j);
+			DeleteLine(j);
 			++numOfLinesFilled;
 		}
 	}
 	return numOfLinesFilled;
+}
+
+bool_t isGameOver()
+{
+	char blockType = 0;
+	int i = 0;
+	while(i < BOARD_WIDTH_IN_BLOCKS){
+		blockType = BoardMatrix[i][0];
+		if(blockType!=0)
+			return true;
+		i++;
+	}
+	return false;
 }

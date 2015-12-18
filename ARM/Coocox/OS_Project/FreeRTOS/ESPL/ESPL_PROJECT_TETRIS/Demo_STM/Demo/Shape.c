@@ -358,34 +358,13 @@ int mShapesInitialPosition  [7 /*kind */ ][4 /* rotation */ ][2 /* position */] 
 };
 
 
-/*
-======================================
-Returns the horizontal displacement of the piece that has to be applied in order to create it in the
-correct position.
 
-Parameters:
-
->> pShape:	Shape to draw
->> pRotation:	1 of the 4 possible rotations
-======================================
-*/
 int pGetXInitialPosition (int pShape, int pRotation)
 {
 	return mShapesInitialPosition [pShape][pRotation][0];
 }
 
 
-/*
-======================================
-Returns the vertical displacement of the piece that has to be applied in order to create it in the
-correct position.
-
-Parameters:
-
->> pPiece:	Piece to draw
->> pRotation:	1 of the 4 possible rotations
-======================================
-*/
 int pGetYInitialPosition (int pShape, int pRotation)
 {
 	return mShapesInitialPosition [pShape][pRotation][1];

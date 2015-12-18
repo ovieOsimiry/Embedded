@@ -7,6 +7,9 @@
 #ifndef Demo_INCLUDED
 #define Demo_INCLUDED
 
+
+typedef enum {JoyStickUp , JoyStickDown, JoyStickNoSelection} joystickselection_t;
+
 struct line
 	{
 		char x_1;
@@ -23,11 +26,13 @@ struct line
 #endif
 
 
+
 static void uartReceive();
 void sendLine(struct coord coord_1, struct coord coord_2);
 static void checkJoystick();
 static void drawTask();
 static void GamePlay();
+static void SystemState();
 void CreateNewPiece();
 void UpdateShape();
 void VApplicationIdleHook();

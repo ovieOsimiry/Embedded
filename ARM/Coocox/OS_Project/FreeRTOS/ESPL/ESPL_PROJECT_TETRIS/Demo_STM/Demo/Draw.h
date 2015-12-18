@@ -24,10 +24,12 @@ void DrawMainMenu();
 void DrawShapeWithHandle(shape_t * shape);
 void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level);
 void DrawNextShape(int type, int orientation);
+void DrawGameOver(const joystickselection_t * joystickselection  );
 
 void InitializeBoardMatrix();
 char GetPeiceType (int pX, int pY);
 boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation);
+bool_t isGameOver();
 void StoreShape (int pX, int pY, int pPiece, int pRotation);
 void DeleteLine (int pY);
 int DeletePossibleLines();
