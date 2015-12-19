@@ -33,6 +33,7 @@ static void checkJoystick();
 static void drawTask();
 static void GamePlay();
 static void SystemState();
+void ResetGamePlay();
 void CreateNewPiece();
 void UpdateShape();
 void VApplicationIdleHook();

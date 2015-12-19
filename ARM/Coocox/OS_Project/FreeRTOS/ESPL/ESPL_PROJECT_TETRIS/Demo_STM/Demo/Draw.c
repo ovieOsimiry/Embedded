@@ -333,11 +333,7 @@ bool_t isGameOver()
 {
 	char blockType = 0;
 	int i = 0;
-	while(i < BOARD_WIDTH_IN_BLOCKS){
-		blockType = BoardMatrix[i][0];
-		if(blockType!=0)
-			return true;
-		i++;
-	}
+	if(BoardMatrix[4][0]!=0 || BoardMatrix[5][0]!=0 || BoardMatrix[6][0]!=0)
+		return true;
 	return false;
 }

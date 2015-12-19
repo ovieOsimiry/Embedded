@@ -48,11 +48,15 @@ QueueHandle_t DrawQueue;
 /*-----------------Please put all shared global variables here------------------------*/
 
 shape_t Shape;
-int gNumberOfLinesCompleted = 0;
+int gTotalNumberOfLinesCompleted = 0;
 int gGameScore = 0;
 int gDifficultyLevel;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
 bool_t gSelectButtonPressed = false;
+/*---------------------Game Play gloabal variables used in GamePlay task-------------*/
+#define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  5;
+//const int SUBSEQUENT_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 10;
+uint32_t gDifficultyCheckPoint;
 
 /*------------------------------------------------------------------------------------*/
 
@@ -155,19 +159,18 @@ static void SystemState()
 	}
 }
 
+
 static void GamePlay()
 {
 
 		shape_t * _shape = &Shape;
 		coord_t lastY = 0;
 		const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
-		const int MAX_DIFFICULTY_LEVEL = 10;
+		const int MAX_DIFFICULTY_LEVEL = 9;
 		const char MAX_TICK = 100;
-		const NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 1;
 		int tick = 0;
-		unsigned int difficulty_check_point = NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
 		boolean_t downMovePossible = true;
-		int temp = 0;
+		int tempNoOfLines = 0;
 
 		CreateNewShape();
 		UpdateShape();
@@ -175,14 +178,15 @@ static void GamePlay()
 /*--------Initialise global variables used within this task----------------*/
 
 		gDifficultyLevel = 0;
+		gDifficultyCheckPoint = (uint32_t) INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
 
 /*-------------------------------------------------------------------------*/
 
 	while(1){
 				vTaskDelay(10);
-				if(gNumberOfLinesCompleted >= difficulty_check_point)
+				if(gTotalNumberOfLinesCompleted >= gDifficultyCheckPoint)
 				{
-					difficulty_check_point = difficulty_check_point + (30/(gDifficultyLevel+1));
+					gDifficultyCheckPoint = gDifficultyCheckPoint + (10/(gDifficultyLevel+1));
 					if(gDifficultyLevel!=MAX_DIFFICULTY_LEVEL)
 					 ++gDifficultyLevel;
 				}
@@ -206,9 +210,9 @@ static void GamePlay()
 					else
 					{
 						StoreShape(_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-						temp = DeletePossibleLines();
-						gNumberOfLinesCompleted += temp;
-						gGameScore+=calculateScore(gDifficultyLevel,temp);
+						tempNoOfLines = DeletePossibleLines();
+						gTotalNumberOfLinesCompleted += tempNoOfLines;
+						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
 						if(!isGameOver())
 							{
 								if( xNewShapeCreationMutex != NULL )
@@ -233,7 +237,8 @@ static void GamePlay()
 				}
 			else if(getState()==7)
 			{
-				InitializeBoardMatrix();
+				ResetGamePlay();
+				tempNoOfLines = 0;//reset temporary local variables within the task.
 			}
 		}
 }
@@ -270,7 +275,7 @@ static void drawTask() {
 		}
 		else if(getState()==3) {
 			DrawShapeWithHandle(&Shape);
-			DrawBoardMatrix(mNextShape,mNextRotation,gNumberOfLinesCompleted,gGameScore,gDifficultyLevel);
+			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel);
 		}
 		else if(getState()==7)
 		{
@@ -284,6 +289,17 @@ static void drawTask() {
 		// swap buffers
 		ESPL_DrawLayer();
 	}
+}
+
+void ResetGamePlay()
+{
+	InitializeBoardMatrix();
+	gGameScore = 0;
+	gDifficultyLevel = 0;
+	gDifficultyCheckPoint = INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;//initialise the difficulty level.
+	gTotalNumberOfLinesCompleted = 0;
+//	gSelectButtonPressed = false;
+//	gjoyStickSelection = JoyStickUp;
 }
 
 int calculateScore(int level, int lines)
@@ -485,7 +501,7 @@ static void checkJoystick() {
 							shapeDownMovementSpeedGaurd=false;//the shape has reached the bottom so we set the guard to false to prevent the next shape from droping fast until the joystick is released
 							StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
 							temp = DeletePossibleLines();
-							gNumberOfLinesCompleted += temp;
+							gTotalNumberOfLinesCompleted += temp;
 							gGameScore+=calculateScore(gDifficultyLevel,temp);
 
 							if(!isGameOver())//check if the game is over.
