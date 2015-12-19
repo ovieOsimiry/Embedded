@@ -127,8 +127,8 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
     // Print string
     gdispDrawString(170+30, 0+70-5, str, font1, White);
 
-    sprintf(str, "%d",level);
-        gdispDrawString(170+80, 0+80, str, font1, White);
+	sprintf(str, "%d",level);
+    gdispDrawString(170+80, 0+80, str, font1, White);
 
     sprintf(str, "Lines");
     // Print string

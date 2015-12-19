@@ -5,6 +5,8 @@
  *
  **/
 #include "stdio.h"
+#include "stdlib.h"
+#include <time.h>
 
 /* Board includes */
 #include "stm32f4xx.h"
@@ -12,6 +14,7 @@
 #include "stm32f4xx_exti.h"
 #include "stm32f4xx_syscfg.h"
 #include "stm32f429i_discovery_lcd.h"
+
 
 /* FreeRTOS includes */
 //#include "FreeRTOS.h"
@@ -26,6 +29,7 @@
 #include "semphr.h"
 #include "task.h"
 #include "timers.h"
+#include "tm_stm32f4_rng.h"
 
 //##
 

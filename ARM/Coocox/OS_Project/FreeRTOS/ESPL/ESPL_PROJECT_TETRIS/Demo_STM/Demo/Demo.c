@@ -11,6 +11,7 @@
 #include "Draw.h"
 #include "Shape.h"
 #include "Election.h"
+#include "time.h"
 
 
 // start and stop bytes for the UART protocol
@@ -112,10 +113,20 @@ void CreateNewShape()
 	mRotation	= mNextRotation;
 	mPosX 		= (BOARD_WIDTH_IN_BLOCKS / 2) + pGetXInitialPosition (mShape, mRotation);
 	mPosY 		= pGetYInitialPosition (mShape, mRotation);
-
-	// Random next shape
-	mNextShape 		=  (rand() % (7)); // (rand() % (max+1-min))+min;
-	mNextRotation 	=  (rand() % (4)); // (rand() % (max+1-min))+min;
+	int randNum;
+	TM_RNG_Init();
+	randNum = TM_RNG_Get() & 0x7;
+	while(randNum>6)
+	{
+		randNum = TM_RNG_Get() & 0x7;
+	}
+	mNextShape 		=  randNum; // (rand() % (max+1-min))+min;
+	randNum = TM_RNG_Get() & 0x7;
+	while(randNum>3)
+	{
+		randNum = TM_RNG_Get() & 0x7;
+	}
+	mNextRotation 	=  randNum; // (rand() % (max+1-min))+min;
 }
 
 void UpdateShape(){
@@ -304,6 +315,7 @@ void ResetGamePlay()
 
 int calculateScore(int level, int lines)
 {
+
 	switch(lines){
 		case 0:
 			return 0;
