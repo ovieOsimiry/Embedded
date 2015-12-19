@@ -22,7 +22,7 @@ extern int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
 void DrawMainMenu();
 void DrawShapeWithHandle(shape_t * shape);
-void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level);
+void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
 void DrawNextShape(int type, int orientation);
 void DrawGameOver(const joystickselection_t * joystickselection  );
 

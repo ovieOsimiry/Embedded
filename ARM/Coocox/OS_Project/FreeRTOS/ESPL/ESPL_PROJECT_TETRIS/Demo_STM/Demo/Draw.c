@@ -77,7 +77,7 @@ void DrawNextShape(int type, int orientation)
 		}
 	}
 }
-void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int level)
+void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
 	font_t font1; // Load font for ugfx
@@ -142,6 +142,17 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
     gdispDrawString(170+30, 0+170-5, str, font1, White);
 
     DrawNextShape(nextShape,nextRotation);
+
+    sprintf(str, "Receiving");
+    gdispDrawString(140, 0+20-5, str, font1, White);
+    sprintf(str, "%d",receiving);
+    gdispDrawString(140, 0+30, str, font1, White);
+
+    sprintf(str, "Sending");
+    gdispDrawString(140, 0+70-5, str, font1, White);
+	sprintf(str, "%d",sending);
+    gdispDrawString(140, 0+80, str, font1, White);
+
 
 }
 

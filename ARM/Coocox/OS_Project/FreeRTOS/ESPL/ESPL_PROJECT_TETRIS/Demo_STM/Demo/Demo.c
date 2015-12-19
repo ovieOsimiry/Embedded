@@ -52,6 +52,8 @@ shape_t Shape;
 int gTotalNumberOfLinesCompleted = 0;
 int gGameScore = 0;
 int gDifficultyLevel;
+int gReceiving = 0;
+int gSending = 0;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
 bool_t gSelectButtonPressed = false;
 /*---------------------Game Play gloabal variables used in GamePlay task-------------*/
@@ -286,7 +288,7 @@ static void drawTask() {
 		}
 		else if(getState()==3) {
 			DrawShapeWithHandle(&Shape);
-			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel);
+			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 		}
 		else if(getState()==7)
 		{
@@ -600,7 +602,7 @@ void sendLine(struct coord coord_1, struct coord coord_2) {
 	UART_SendData((uint8_t) ESPL_StopByte);
 }
 
-/**
+/*
  * Task which receives data via UART and decodes it.
  */
 static void uartReceive() {
