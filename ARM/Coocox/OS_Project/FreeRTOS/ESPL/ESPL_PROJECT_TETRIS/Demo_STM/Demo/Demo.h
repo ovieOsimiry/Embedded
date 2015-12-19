@@ -38,3 +38,5 @@ void CreateNewPiece();
 void UpdateShape();
 void VApplicationIdleHook();
 static void levelTask();
+void sendValue(uint8_t numberOfLines);
+static void ReceiveValue();

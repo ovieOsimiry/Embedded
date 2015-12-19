@@ -98,7 +98,8 @@ int main() {
 	// Initializes Tasks with their respective priority
 	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
-	xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
+	//xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
+	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 2, NULL);
 	xTaskCreate(GamePlay, "GamePlay", 500, NULL, 3, NULL);
 	xTaskCreate(SystemState, "SystemState", 500, NULL, 3, NULL);
 
@@ -194,7 +195,7 @@ static void GamePlay()
 		gDifficultyCheckPoint = (uint32_t) INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
 
 /*-------------------------------------------------------------------------*/
-
+		int testSending = 0;
 	while(1){
 				vTaskDelay(10);
 				if(gTotalNumberOfLinesCompleted >= gDifficultyCheckPoint)
@@ -226,6 +227,13 @@ static void GamePlay()
 						tempNoOfLines = DeletePossibleLines();
 						gTotalNumberOfLinesCompleted += tempNoOfLines;
 						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
+
+						if(tempNoOfLines>=1)
+							{
+								gSending = ++testSending;//(uint8_t)(rand()%4);
+								sendValue((uint8_t)gSending);
+							}
+
 						if(!isGameOver())
 							{
 								if( xNewShapeCreationMutex != NULL )
@@ -548,7 +556,7 @@ static void checkJoystick() {
 			}
 
 			// Send over UART
-			sendLine(joystick_last, joystick_now);
+			//sendLine(joystick_last, joystick_now);
 			// Execute every 20 Ticks
 			vTaskDelayUntil(&xLastWakeTime, 20);
 		}
@@ -579,7 +587,103 @@ void timerStart(){
 	xTimerReset(xTimers, 0);
 }
 
+void sendValue(uint8_t numberOfLines)
+{
+	static uint8_t xorChar = 0xeb;
+	char checksum;
+	// Generate simple error detection checksum
+	checksum = xorChar^numberOfLines;
+	// Structure of one packet:
+	//  Start byte
+	//	4 * line byte
+	//	checksum (all xor)
+	//	End byte
+	UART_SendData((uint8_t) ESPL_StartByte);
+	UART_SendData((uint8_t) numberOfLines);
+	UART_SendData((uint8_t) checksum);
+	UART_SendData((uint8_t) ESPL_StopByte);
+}
 
+/**
+ * Task which receives data via UART and decodes it.
+ */
+static void ReceiveValue()
+{
+	char input;
+	static uint8_t xorChar = 0xeb;
+	uint8_t pos = 0;
+	char checksum;
+	char buffer[3]; // Start byte,4* line byte, checksum (all xor), End byte
+	struct line line;
+	while (TRUE)
+	 {
+		// wait for data in queue
+		xQueueReceive(ESPL_RxQueue, &input, portMAX_DELAY);
+		// decode package by buffer position
+		switch (pos) {
+			// start byte
+			case 0:
+				if (input == ESPL_StartByte) {
+					buffer[0] = input;
+					pos = 1;
+				}
+				break;
+			// line bytes
+			case 1:
+				buffer[1] = input; //value sent from other device.
+				pos = 2;
+				break;
+			case 2:
+				buffer[2] = input; //checksum value.
+				pos = 3;
+				break;
+			case 3:
+				if (input == ESPL_StopByte){
+					checksum = xorChar ^ buffer[1];
+					if(checksum==buffer[2])
+					{
+						gReceiving = buffer[1];//sendData(buffer[1])
+					}
+					else
+					{
+						pos = 0;
+					}
+				}
+				else
+				{
+					pos = 0;
+				}
+				break;
+//			case 4:
+//			// Check sum
+//			case 5:
+//				buffer[pos] = input;
+//				pos++;
+//				break;
+//			// Last byte should be stop byte
+//			case 6:
+//				if (input == ESPL_StopByte) {
+//					// Check if checksum is accurate
+//					checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4];
+//					// Decode packet to line struct
+//					if (buffer[5] == checksum) {
+//						line.x_1 = buffer[1] / 2;
+//						line.y_1 = buffer[2] / 2;
+//						line.x_2 = buffer[3] / 2;
+//						line.y_2 = buffer[4] / 2;
+//						// Send line to be drawn
+//						xQueueSend(DrawQueue, &line, 100);
+//						pos = 0;
+//					} else {
+//						// Reset buffer
+//						pos = 0;
+//					}
+//				} else {
+//					pos = 0;
+//				}
+		}
+	}
+}
 
 /**
  * Example function to send data over UART
