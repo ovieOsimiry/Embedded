@@ -643,6 +643,7 @@ static void ReceiveValue()
 					if(checksum==buffer[2])
 					{
 						gReceiving = buffer[1];//sendData(buffer[1])
+						pos = 0;
 					}
 					else
 					{
@@ -672,7 +673,7 @@ static void ReceiveValue()
 //						line.x_2 = buffer[3] / 2;
 //						line.y_2 = buffer[4] / 2;
 //						// Send line to be drawn
-//						xQueueSend(DrawQueue, &line, 100);
+						//xQueueSend(DrawQueue, &line, 100);
 //						pos = 0;
 //					} else {
 //						// Reset buffer
