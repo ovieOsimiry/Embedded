@@ -93,7 +93,7 @@ void gpioInit() {
 	   SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource2);//Configure ESPL_Pin_Button_D as EXTI input
 	  EXTI_InitStructure.EXTI_Line = EXTI_Line2;
 	  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
 	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	  EXTI_Init(&EXTI_InitStructure);
 
@@ -123,7 +123,7 @@ void gpioInit() {
 	  SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource5);//Configure ESPL_Pin_Button_C
 	  EXTI_InitStructure.EXTI_Line = EXTI_Line5;
 	  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
 	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 	  EXTI_Init(&EXTI_InitStructure);
 

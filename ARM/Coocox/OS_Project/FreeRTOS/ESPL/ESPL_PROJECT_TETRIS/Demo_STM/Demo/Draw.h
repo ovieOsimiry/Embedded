@@ -20,6 +20,7 @@ extern char verticalMove;
 extern char rotation;
 extern int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
+void DrawPauseMenu();
 void DrawMainMenu();
 void DrawShapeWithHandle(shape_t * shape);
 void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);

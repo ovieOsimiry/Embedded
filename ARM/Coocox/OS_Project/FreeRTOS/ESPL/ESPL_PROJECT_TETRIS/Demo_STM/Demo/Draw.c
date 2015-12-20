@@ -222,7 +222,42 @@ void DrawGameOver(const joystickselection_t * joystickselection  )
 
 	sprintf(str, "Select an option and then press button B");
 	gdispDrawString(30, 120, str, font1, White);
+}
 
+void DrawPauseMenu(){
+	char str[100]; // Init buffer for message
+	gdispClear(Black);
+
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans32*");
+
+	sprintf(str, "PAUSE");
+	gdispDrawString(140, 5, str, font1, White);
+
+	if(getState() == 4){
+		sprintf(str, "->");
+		gdispDrawString(20, 30, str, font1, White);
+	}
+	else if(getState() == 5){
+			sprintf(str, "->");
+			gdispDrawString(20, 60, str, font1, White);
+	}
+	else if(getState() == 6){
+			sprintf(str, "->");
+			gdispDrawString(20, 90, str, font1, White);
+	}
+
+	sprintf(str, "Resume");
+	gdispDrawString(30, 30, str, font1, White);
+
+	sprintf(str, "Restart game");
+	gdispDrawString(30, 60, str, font1, White);
+
+	sprintf(str, "Exit game");
+	gdispDrawString(30, 90, str, font1, White);
+
+	sprintf(str, "Select an option and then press button B");
+	gdispDrawString(30, 150, str, font1, White);
 }
 
 color_t GetColor(char color)

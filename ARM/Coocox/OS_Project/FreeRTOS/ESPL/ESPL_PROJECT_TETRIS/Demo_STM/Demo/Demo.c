@@ -148,20 +148,39 @@ static void SystemState()
 			switch(getState())
 			{
 				case 1:
-					if(gjoyStickSelection==JoyStickUp) setState(1);
-					else if(gjoyStickSelection==JoyStickDown) setState(2);
+					if(gjoyStickSelection==JoyStickUp) {setState(1); gjoyStickSelection = JoyStickNoSelection;}
+					else if(gjoyStickSelection==JoyStickDown) {setState(2); gjoyStickSelection = JoyStickNoSelection;}
 					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
 				break;
 
 				case 2:
-					if(gjoyStickSelection==JoyStickDown) setState(2);
-					else if(gjoyStickSelection==JoyStickUp) setState(1);
+					if(gjoyStickSelection==JoyStickDown) {setState(2); gjoyStickSelection = JoyStickNoSelection;}
+					else if(gjoyStickSelection==JoyStickUp) {setState(1); gjoyStickSelection = JoyStickNoSelection;}
 					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
 				break;
 
 				case 3:
 					gSelectButtonPressed = 0;
 				break;
+
+				case 4:
+					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
+					else if(gjoyStickSelection==JoyStickDown) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
+					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+				break;
+
+				case 5:
+					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
+					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
+					if(gSelectButtonPressed) {ResetGamePlay(); setState(3); gSelectButtonPressed = 0;};
+				break;
+
+				case 6:
+					if(gjoyStickSelection==JoyStickUp) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
+					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
+					if(gSelectButtonPressed) {ResetGamePlay(); gSelectButtonPressed = 0; setState(1);};
+				break;
+
 
 				case 7:
 					if(gSelectButtonPressed && gjoyStickSelection==JoyStickUp) {setState(3); gSelectButtonPressed = 0;}
@@ -298,6 +317,9 @@ static void drawTask() {
 			DrawShapeWithHandle(&Shape);
 			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 		}
+		else if(getState()== 4 || getState() == 5 || getState() == 6){
+			DrawPauseMenu();
+		}
 		else if(getState()==7)
 		{
 			DrawGameOver(&gjoyStickSelection);
@@ -314,11 +336,14 @@ static void drawTask() {
 
 void ResetGamePlay()
 {
-	InitializeBoardMatrix();
 	gGameScore = 0;
 	gDifficultyLevel = 0;
 	gDifficultyCheckPoint = INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;//initialise the difficulty level.
 	gTotalNumberOfLinesCompleted = 0;
+	InitializeBoardMatrix();
+	CreateNewShape();
+	UpdateShape();
+
 //	gSelectButtonPressed = false;
 //	gjoyStickSelection = JoyStickUp;
 }
@@ -348,8 +373,19 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 {
   if(EXTI_GetITStatus(EXTI_Line0) != RESET)
   {
-    /* Button E will Reset all counters */
-	  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0)
+	  timerStart();
+	  if(debounce == 0)
+	  {
+		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
+			  /* Button E will Reset all counters */
+			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
+				  if(getState()!=1 && getState() != 2){
+					  setState(4);
+				  	  debounce = 1;
+				  }
+			  }
+		  }
+	  }
     /* Clear the EXTI line 0 pending bit */
     EXTI_ClearITPendingBit(EXTI_Line0);
   }
@@ -378,28 +414,13 @@ void EXTI4_IRQHandler(void)
 	 {
 		if(EXTI_GetITStatus(EXTI_Line4) != RESET)
 		{
-			/* Increase count for button D */
-			debounce == 1;
 			if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
 			{
-	//			if(getState()==1||getState()==2)
-	//			{
-	//				if(getState()==1)
-	//				{
-	//					setState(3);
-	//				}
-	//				if(getState()==2)
-	//				{
-	//					setState(4);
-	//				}
-	//			}
-	//			else {
-	//			}
 				gSelectButtonPressed = 1;
-
+				debounce == 1;
 			}
 			/* Clear the EXTI line 0 pending bit */
-			}
+		}
 	}
 	EXTI_ClearITPendingBit(EXTI_Line4);
 }
@@ -544,11 +565,13 @@ static void checkJoystick() {
 						}
 					}
 				}
+				else vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 
 			}
 			else if((joystick_now.y < 110))//joystick moved upwards
 			{
 				gjoyStickSelection = JoyStickUp;
+				if(getState!=3) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
 			else
 			{
@@ -586,6 +609,7 @@ void timerStart(){
 	//Reset the timer
 	xTimerReset(xTimers, 0);
 }
+/************************************************************************************************/
 
 void sendValue(uint8_t numberOfLines)
 {
