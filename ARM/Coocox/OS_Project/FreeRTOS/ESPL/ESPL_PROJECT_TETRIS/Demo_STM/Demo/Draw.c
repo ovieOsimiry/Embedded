@@ -13,6 +13,8 @@
 
 int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
+//int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
+
 /*-------------------------------------------------------------------------------------------------------
  * This function clears the board Matrix by initializing all elements to 0
  *
@@ -67,9 +69,9 @@ void DrawNextShape(int type, int orientation)
 			switch (GetAPeiceFromTheShape (type, orientation, j, i))
 			{
 				case 1: mColor = Red; break;	// For each block of the piece except the pivot
-				case 2: mColor = Yellow; break;	// For the pivot
-				case 3: mColor = Green; break;	// For the pivot
-				case 4: mColor = Orange; break;	// For the pivot
+				case 2: mColor = Yellow; break;	//
+				case 3: mColor = Green; break;	//
+				case 4: mColor = Orange; break;	//
 			}
 
 			if (GetAPeiceFromTheShape (type, orientation, j, i) != 0)
@@ -77,6 +79,7 @@ void DrawNextShape(int type, int orientation)
 		}
 	}
 }
+
 void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
@@ -156,7 +159,7 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
 
 }
 
-void DrawMainMenu()
+void DrawMainMenu(const joystickselection_t * joystickselection, const playermode_t * playerMode )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -168,12 +171,12 @@ void DrawMainMenu()
 	gdispDrawString(30, 5, str, font1, White);
 
 
-	if(getState()==1)
+	if(*joystickselection==JoyStickUp)//if(getState()==1)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 30, str, font1, White);
 	}
-	if(getState()==2)
+	if(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 60, str, font1, White);
@@ -182,8 +185,11 @@ void DrawMainMenu()
 	sprintf(str, "Player 1");
 	gdispDrawString(30, 30, str, font1, White);
 
-	sprintf(str, "Player 2");
-	gdispDrawString(30, 60, str, font1, White);
+	if(*playerMode==twoPlayerMode)
+	{
+		sprintf(str, "Player 2");
+		gdispDrawString(30, 60, str, font1, White);
+	}
 
 	sprintf(str, "Select an option and then press button B");
 	gdispDrawString(30, 120, str, font1, White);
@@ -279,6 +285,9 @@ color_t GetColor(char color)
 		case 4:
 		return Orange;
 
+		case 5:
+		return Gray;
+
 		default:
 			return White;
 	}
@@ -305,7 +314,7 @@ boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
 			if(	i1 < 0 	||	i1 > BOARD_WIDTH_IN_BLOCKS  - 1	|| 	j1 > BOARD_HEIGHT_IN_BLOCKS - 1)
 			{
 				if (GetAPeiceFromTheShape (pShape, pRotation, j2, i2) != 0)
-					return 0;
+					return false;
 			}
 
 			// Check if the shape touching a shape already stored in the board
@@ -352,6 +361,176 @@ void DeleteLine (int pY)
 	}
 }
 
+int CheckForUnRemovableLine()
+{
+	for (int j = 0; j <= BOARD_HEIGHT_IN_BLOCKS; j++)
+		{
+			if(BoardMatrix[0][j]==5)
+				//if we find an already existing un-removable line then we return the row number of the next matrix line above
+				return j-1; //check later, to avoid negative value.
+		}
+	return (BOARD_HEIGHT_IN_BLOCKS-1);
+}
+
+
+void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate)
+{
+	*yCordinate = 19;
+	*xLeftCoordinate = 0;
+	*xRightCoordinate = 0;
+	for(int j = 0; j < BOARD_HEIGHT_IN_BLOCKS; j++)
+		{
+			for(int i = 0; i<BOARD_WIDTH_IN_BLOCKS; i++)
+			{
+				if(BoardMatrix[i][j]!=0 && BoardMatrix[i][j]!=5)//if(BoardMatrix[i][j]!=0)
+				{
+				//if we find an already existing shape on the board we take the x and y coordinate of the shape.
+				//we will use these values to compare with the x and y coordinate of the falling shape
+					*xLeftCoordinate = i;// we have found the left side of the x coordinate for the shape
+					*yCordinate = j-1; //check later, to avoid negative value.
+					for(i = BOARD_WIDTH_IN_BLOCKS-1; i>=0; i--)
+					{
+						if(BoardMatrix[i][j]!=0)
+							{
+							 *xRightCoordinate = i;// we have found the right side of the x coordinate for the shape
+							 return;
+							}
+					}
+				}
+			}
+		}
+}
+
+
+int GetYCoordForButtomOfShape(shape_t * shape)
+{
+	int aPeiceOfShape = 0;
+	for(int x = 4; x>=0; x--)
+	{
+		for(int y = 0; y<=4; y++)
+		{
+			aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
+		if(aPeiceOfShape!=0)
+			return x;
+		}
+
+	}
+}
+
+
+void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * xLeft)
+{
+	int aPeiceOfShape = 0;
+
+	for(int x = 0; x<5; x++)
+	{
+		for(int y = 0; y<=4; y++)
+		{
+			aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
+			if(aPeiceOfShape!=0)
+			{
+				*xLeft = y;
+				 break;
+			}
+		}
+
+	}
+
+	for(int x = 0; x<5; x++)
+		{
+			for(int y = 4; y>=0; y--)
+			{
+				aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
+				if(aPeiceOfShape!=0)
+				{
+					*xRight = y;
+					 break;
+				}
+			}
+
+		}
+return;
+}
+
+bool_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard)
+	{
+		for(int j=shapeXCoordLeft;j<=shapeXCoordRight;j++)
+		{
+			for(int i=leftXCoordOfHeighestPointOnTheBoard;i<=rightXCoordOfHeighestPointOnTheBoard;i++)
+			{
+				if(i==j)
+					return true;
+			}
+		}
+		return false;
+	}
+
+void AddLine(int NumOfLines, shape_t * shape)
+{
+	int StartPos;
+	int DistanceBtwShapeAndNewBaseOfBoard;//distance between the bottom of the shape and the new refernece base of the board
+	int DistBtwShapeAndHeighestPointOnBoard;
+	int yCoordForBtmOfShape;
+	int baseOfShape;
+	coord_t rightXCoordOfHeighestPointOnTheBoard;
+	coord_t leftXCoordOfHeighestPointOnTheBoard;
+	coord_t yCoordOfHeighestPointOnTheBoard;
+	coord_t shapeXCoordRight;
+	coord_t shapeXCoordLeft;
+
+	GetHeighestPointOnBoard(&rightXCoordOfHeighestPointOnTheBoard, &leftXCoordOfHeighestPointOnTheBoard, &yCoordOfHeighestPointOnTheBoard);
+	GetXCoordsForBothSidesOfShape(shape,&shapeXCoordRight,&shapeXCoordLeft);
+
+	shapeXCoordLeft = shapeXCoordLeft + shape->x;
+	shapeXCoordRight = (shape->x + 4) - shapeXCoordRight;
+
+	baseOfShape = GetYCoordForButtomOfShape(shape);
+	yCoordForBtmOfShape = shape->y + baseOfShape;
+	StartPos = CheckForUnRemovableLine();
+
+	DistanceBtwShapeAndNewBaseOfBoard = StartPos - yCoordForBtmOfShape;
+	DistBtwShapeAndHeighestPointOnBoard = yCoordOfHeighestPointOnTheBoard - yCoordForBtmOfShape;
+
+
+	if(CheckForCollision(shapeXCoordRight,shapeXCoordLeft, rightXCoordOfHeighestPointOnTheBoard, leftXCoordOfHeighestPointOnTheBoard ))
+	{
+		if(DistBtwShapeAndHeighestPointOnBoard < NumOfLines)
+		{
+			shape->y = shape->y - (NumOfLines - DistBtwShapeAndHeighestPointOnBoard);
+		}
+	}
+//	else if(StartPos!= 0)
+//	{
+	else if((DistanceBtwShapeAndNewBaseOfBoard) < NumOfLines)
+		{
+			(shape->y) = (shape->y) - (NumOfLines - DistanceBtwShapeAndNewBaseOfBoard);
+		}
+
+	/*------Beginning from the bottom, move each line of block up by a number equal to the number of lines that will be added----*/
+
+		for (int j = 0; j <= (StartPos-NumOfLines); j++)
+			{
+				for (int i = 0; i < BOARD_WIDTH_IN_BLOCKS; i++)
+				{
+					BoardMatrix[i][j] = BoardMatrix[i][j+NumOfLines];//#check here for negative value when ([j-NumOfLines])
+				}
+			}
+
+
+	/*--------------------------------------------------------------------------------*/
+
+	/*--------------------Add the number of Unremovable blocks specified in NumOfLines-----------*/
+		for (int j = StartPos; j > (StartPos-NumOfLines); j--)
+			{
+					for (int i = 0; i < BOARD_WIDTH_IN_BLOCKS; i++)
+					{
+						BoardMatrix[i][j] = 5; // assign space as an un-removable peice.
+					}
+			}
+	/*--------------------------------------------------------------------------------------------*/
+//	}
+}
+
 
 int DeletePossibleLines ()
 {
@@ -363,7 +542,7 @@ int DeletePossibleLines ()
 		while (i < BOARD_WIDTH_IN_BLOCKS)
 		{
 			blockType = BoardMatrix[i][j];
-			if (blockType == 0) break;
+			if (blockType == 0 || blockType == 5) break;//#
 				i++;
 		}
 

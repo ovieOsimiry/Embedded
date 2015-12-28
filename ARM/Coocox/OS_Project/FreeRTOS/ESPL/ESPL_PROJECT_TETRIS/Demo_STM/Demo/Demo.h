@@ -7,8 +7,10 @@
 #ifndef Demo_INCLUDED
 #define Demo_INCLUDED
 
+#include "stm32f4xx.h"
 
 typedef enum {JoyStickUp , JoyStickDown, JoyStickNoSelection} joystickselection_t;
+typedef enum {onePlayerMode, twoPlayerMode} playermode_t;
 
 struct line
 	{
@@ -23,7 +25,7 @@ struct line
 		char y;
 	};
 
-#endif
+
 
 
 
@@ -37,6 +39,7 @@ void ResetGamePlay();
 void CreateNewPiece();
 void UpdateShape();
 void VApplicationIdleHook();
-static void levelTask();
-void sendValue(uint8_t numberOfLines);
+void sendValue(uint8_t * aByteValue);
 static void ReceiveValue();
+
+#endif

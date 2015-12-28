@@ -7,6 +7,7 @@
  *
  */
 
+#include "Demo.h"
 #include "includes.h"
 #include "Draw.h"
 #include "Shape.h"
@@ -55,9 +56,15 @@ int gDifficultyLevel;
 int gReceiving = 0;
 int gSending = 0;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
-bool_t gSelectButtonPressed = false;
-/*---------------------Game Play gloabal variables used in GamePlay task-------------*/
+joystickselection_t gjoyStickLastSelection = JoyStickNoSelection;
+boolean_t gSelectButtonPressed = false;
+boolean_t gShapeDownMovementSpeedGaurd = false;
+boolean_t gSend2PlayerRequestFlag = true;
+
+playermode_t gPlayerMode = onePlayerMode;
+/*---------------------Game Play global variables used in GamePlay task-------------*/
 #define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  5;
+const uint8_t TWO_PLAYER_REQUEST_VALUE = 0xeb;
 //const int SUBSEQUENT_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 10;
 uint32_t gDifficultyCheckPoint;
 
@@ -68,7 +75,7 @@ uint32_t gDifficultyCheckPoint;
 
 /*------------------------------Semaphores/Mutexs-------------------------------------*/
 
-SemaphoreHandle_t xNewShapeCreationMutex;
+//SemaphoreHandle_t xNewShapeCreationMutex;
 
 /*---------------------------------------Timers---------------------------------------*/
 TimerHandle_t xTimers; //Define the de-bouncing timer
@@ -84,7 +91,7 @@ TimerHandle_t xTimers; //Define the de-bouncing timer
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
-	xNewShapeCreationMutex = xSemaphoreCreateMutex();
+	//xNewShapeCreationMutex = xSemaphoreCreateMutex();
 	//Debouncing timer initialization
 	timerInit();
 
@@ -100,8 +107,8 @@ int main() {
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	//xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
 	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 2, NULL);
-	xTaskCreate(GamePlay, "GamePlay", 500, NULL, 3, NULL);
-	xTaskCreate(SystemState, "SystemState", 500, NULL, 3, NULL);
+	xTaskCreate(GamePlay, "GamePlay", 1000, NULL, 3, NULL);
+	xTaskCreate(SystemState, "SystemState", 1000, NULL, 3, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -142,49 +149,141 @@ void UpdateShape(){
 
 static void SystemState()
 {
+	TickType_t _debounceDelay = 300;
+	/*------------------------Initialise all variables used within this task----------------*/
+	gPlayerMode = onePlayerMode;
+    gjoyStickLastSelection = JoyStickUp;
+    gSelectButtonPressed = 0;
+    gReceiving = 0;
+    gSend2PlayerRequestFlag = true;
+    int lastState;
+    /*---------------------------------------------------------------------------------------*/
 	while(1)
 	{
 
 			switch(getState())
 			{
 				case 1:
-					if(gjoyStickSelection==JoyStickUp) {setState(1); gjoyStickSelection = JoyStickNoSelection;}
-					else if(gjoyStickSelection==JoyStickDown) {setState(2); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+
+					if(gjoyStickSelection == JoyStickUp)
+						{
+						   gPlayerMode = onePlayerMode;
+						   gReceiving = 0;
+						   gjoyStickLastSelection = JoyStickUp;
+						}
+					else if(gjoyStickSelection == JoyStickDown)
+						{
+							uint8_t request = TWO_PLAYER_REQUEST_VALUE;
+						    gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
+							sendValue(&request);
+							//vTaskDelay(5);// wait for response to come.
+							if(gReceiving == TWO_PLAYER_REQUEST_VALUE)
+							{
+								gPlayerMode = twoPlayerMode;
+								gjoyStickLastSelection = JoyStickDown;
+								gReceiving = 0;//reset received value
+							}
+						}
+					else//(gjoyStickSelection==JoyStickNoSelection)
+						{
+							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)// && gSend2PlayerRequestFlag == true)
+							 {
+								uint8_t response = TWO_PLAYER_REQUEST_VALUE;
+								gReceiving = 0;
+								sendValue(&response);
+								gSend2PlayerRequestFlag = false;
+							 }
+						}
+						//if(gjoyStickLastSelection==JoyStickUp){setState(1);}// gjoyStickSelection = JoyStickNoSelection;}
+						if (gSelectButtonPressed && gjoyStickLastSelection == JoyStickDown)
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectButtonPressed = 0;
+							gReceiving = 0;
+							setState(2);
+						} // gjoyStickLastSelection=JoyStickNoSelection;}
+
+						if (gSelectButtonPressed && gjoyStickLastSelection == JoyStickUp)
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectButtonPressed = 0;
+							gReceiving = 0;
+							setState(3);
+						}
 				break;
 
 				case 2:
-					if(gjoyStickSelection==JoyStickDown) {setState(2); gjoyStickSelection = JoyStickNoSelection;}
-					else if(gjoyStickSelection==JoyStickUp) {setState(1); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+					gSelectButtonPressed = 0;
+					lastState = 2;
 				break;
 
 				case 3:
 					gSelectButtonPressed = 0;
+					lastState = 3;
 				break;
 
 				case 4:
 					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
 					else if(gjoyStickSelection==JoyStickDown) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {setState(3); gSelectButtonPressed = 0;};
+					if(gSelectButtonPressed)
+					{
+						if(lastState==3)
+							setState(3);
+						else if(lastState==2)
+							setState(2);
+						gSelectButtonPressed = 0;
+					};
 				break;
 
 				case 5:
 					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
 					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {ResetGamePlay(); setState(3); gSelectButtonPressed = 0;};
+					if(gSelectButtonPressed) {
+						vTaskDelay(_debounceDelay);
+						ResetGamePlay();
+						if(lastState==3)
+							setState(3);
+						else if(lastState==2)
+							setState(2);
+						gSelectButtonPressed = 0;
+					};
 				break;
 
 				case 6:
 					if(gjoyStickSelection==JoyStickUp) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
 					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {ResetGamePlay(); gSelectButtonPressed = 0; setState(1);};
+					if(gSelectButtonPressed)
+					{
+						vTaskDelay(_debounceDelay);
+						ResetGamePlay();
+						gSelectButtonPressed = 0;
+						setState(1);
+					};
 				break;
 
 
 				case 7:
-					if(gSelectButtonPressed && gjoyStickSelection==JoyStickUp) {setState(3); gSelectButtonPressed = 0;}
-					if(gSelectButtonPressed && gjoyStickSelection==JoyStickDown) {setState(1); gSelectButtonPressed = 0;}
+					if(gjoyStickSelection==JoyStickUp)
+						gjoyStickLastSelection =JoyStickUp ;
+					if(gjoyStickSelection==JoyStickDown)
+						gjoyStickLastSelection = JoyStickDown;
+					if(gSelectButtonPressed && gjoyStickLastSelection==JoyStickUp)//restart game
+					{
+						vTaskDelay(_debounceDelay);
+						gSelectButtonPressed = 0;
+
+						if(lastState==3)
+							setState(3);
+						else if(lastState==2)
+							setState(2);
+					}
+					if(gSelectButtonPressed && gjoyStickLastSelection==JoyStickDown)//go to main menu
+					{
+						vTaskDelay(_debounceDelay);
+						gSelectButtonPressed = 0;
+						gjoyStickLastSelection=JoyStickUp;
+						setState(1);
+					}
 
 			}
 
@@ -204,7 +303,6 @@ static void GamePlay()
 		int tick = 0;
 		boolean_t downMovePossible = true;
 		int tempNoOfLines = 0;
-
 		CreateNewShape();
 		UpdateShape();
 
@@ -214,7 +312,13 @@ static void GamePlay()
 		gDifficultyCheckPoint = (uint32_t) INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
 
 /*-------------------------------------------------------------------------*/
-		int testSending = 0;
+
+/*----------------------------------------------Remove after Debugging----------------------------------------------------*/
+		int testingAddLines = 0;
+/*--------------------------------------------------------------------------------------------------------------*/
+
+
+
 	while(1){
 				vTaskDelay(10);
 				if(gTotalNumberOfLinesCompleted >= gDifficultyCheckPoint)
@@ -224,12 +328,32 @@ static void GamePlay()
 					 ++gDifficultyLevel;
 				}
 
+				if(getState() == 2) //if we are in 2 player mode, when lines are sent add them.
+				{
+					switch(gReceiving)
+					{
+						case 1:
+							AddLine(1,_shape);
+							gReceiving = 0;
+						break;
+						case 2:
+							AddLine(2,_shape);
+							gReceiving = 0;
+						break;
+						case 4:
+							AddLine(4,_shape);
+							gReceiving = 0;
+						break;
+					}
+				}
+
 				if(tick >=(MAX_TICK/(gDifficultyLevel+1)))
 					tick = 0;
 				else
 					tick++;
 
-			if(tick==(MAX_TICK/(gDifficultyLevel+1)) && getState()==3)
+			if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==3 || getState()==2) ) ||
+				((gjoyStickSelection == JoyStickDown) && (getState()==3  || getState()==2) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
 					lastY = _shape->y;
 					downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
@@ -246,27 +370,34 @@ static void GamePlay()
 						tempNoOfLines = DeletePossibleLines();
 						gTotalNumberOfLinesCompleted += tempNoOfLines;
 						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
-
-						if(tempNoOfLines>=1)
+						gShapeDownMovementSpeedGaurd=false;
+						if(tempNoOfLines>=1 && getState()==2)
 							{
-								gSending = ++testSending;//(uint8_t)(rand()%4);
-								sendValue((uint8_t)gSending);
+								uint8_t temp;
+								switch(tempNoOfLines)
+								{
+								case 2:
+									temp = 1;
+									gSending = temp;
+									sendValue(&temp);
+									break;
+								case 3:
+									temp = 2;
+									gSending = temp;
+									sendValue(&temp);
+									break;
+								case 4:
+									temp = 4;
+									gSending = temp;
+									sendValue(&temp);
+									break;
+								}
 							}
 
 						if(!isGameOver())
 							{
-								if( xNewShapeCreationMutex != NULL )
-									{
-									//Since the shape can be updated from another task, we try to take mutex before updating shape
-									//if we wait for mutex to become available for at most 1 tick, and it is not available then we don't
-									//bother to update shape because the other task must have already done so.
-									if( xSemaphoreTake( xNewShapeCreationMutex, ( TickType_t )1) == pdTRUE )
-										{
-											CreateNewShape();
-											UpdateShape();
-											xSemaphoreGive( xNewShapeCreationMutex );
-										}
-									}
+								CreateNewShape();
+								UpdateShape();
 							}
 						else
 						 {
@@ -279,7 +410,22 @@ static void GamePlay()
 			{
 				ResetGamePlay();
 				tempNoOfLines = 0;//reset temporary local variables within the task.
+
+				/*-------Remove after debugging-----------*/
+				testingAddLines = 0;
+				gSending = 0;
 			}
+
+
+//			if(testingAddLines == 2000)
+//			{
+//				testingAddLines = 0;
+//				AddLine(1,_shape);
+//			}
+//			else if(getState()==3)
+//			{
+//				++testingAddLines;
+//			}
 		}
 }
 
@@ -309,11 +455,11 @@ static void drawTask() {
 
 		//DrawShape (BOARD_WIDTH/2*BLOCK_SIZE, verticalMove*BLOCK_SIZE, 5, rotation);
 
-		if(getState()==1||getState()==2)
+		if(getState()==1)
 		{
-			DrawMainMenu();
+			DrawMainMenu(&gjoyStickLastSelection, &gPlayerMode);
 		}
-		else if(getState()==3) {
+		else if(getState()==3 || getState()==2) {
 			DrawShapeWithHandle(&Shape);
 			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 		}
@@ -322,7 +468,8 @@ static void drawTask() {
 		}
 		else if(getState()==7)
 		{
-			DrawGameOver(&gjoyStickSelection);
+			//DrawGameOver(&gjoyStickSelection);
+			DrawGameOver(&gjoyStickLastSelection);
 		}
 
 		// Wait for display to stop writing
@@ -379,7 +526,8 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
 			  /* Button E will Reset all counters */
 			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
-				  if(getState()!=1 && getState() != 2){
+				  if(getState()!=1)// && getState() != 2)
+				  {
 					  setState(4);
 				  	  debounce = 1;
 				  }
@@ -481,7 +629,7 @@ static void checkJoystick() {
 		coord_t lastY = 0;
 		boolean_t movePossible = true;
 		shape_t * _shape = &Shape;
-		boolean_t shapeDownMovementSpeedGaurd = false;
+//		boolean_t shapeDownMovementSpeedGaurd = false;
 		int leftMove = 0;
 		int rightMove = 0;
 		lastX = Shape.x;
@@ -527,45 +675,7 @@ static void checkJoystick() {
 			if(joystick_now.y > 135) //Joy stick is moved downwards.
 			{
 				gjoyStickSelection = JoyStickDown;
-				if(getState()==3) {
-					if(shapeDownMovementSpeedGaurd==true)//check guard to see if the shape has already touched the base of the board
-					{
-						lastY = _shape->y;
-						downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
-						if(downMovePossible==true)
-						{
-							if (_shape->y==20)
-							_shape->y = 0;
-							else
-							_shape->y+=1;
-						}
-						else
-						{
-							shapeDownMovementSpeedGaurd=false;//the shape has reached the bottom so we set the guard to false to prevent the next shape from droping fast until the joystick is released
-							StoreShape (_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
-							temp = DeletePossibleLines();
-							gTotalNumberOfLinesCompleted += temp;
-							gGameScore+=calculateScore(gDifficultyLevel,temp);
-
-							if(!isGameOver())//check if the game is over.
-							{
-								if( xNewShapeCreationMutex != NULL )
-									{
-									//Since the shape can be updated from another task, we try to take mutex before updating shape
-									//if we wait for mutex to become available for at most 1 tick, and it is not available then we don't
-									//bother to update shape because the other task must have already done so.
-									if( xSemaphoreTake( xNewShapeCreationMutex, ( TickType_t )1) == pdTRUE )
-										{
-											CreateNewShape();
-											UpdateShape();
-											xSemaphoreGive( xNewShapeCreationMutex );
-										}
-									}
-							}
-						}
-					}
-				}
-				else vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
+				//else vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 
 			}
 			else if((joystick_now.y < 110))//joystick moved upwards
@@ -575,9 +685,9 @@ static void checkJoystick() {
 			}
 			else
 			{
-				shapeDownMovementSpeedGaurd=true;
+				gShapeDownMovementSpeedGaurd=true;
+				gjoyStickSelection = JoyStickNoSelection;
 			}
-
 			// Send over UART
 			//sendLine(joystick_last, joystick_now);
 			// Execute every 20 Ticks
@@ -611,19 +721,19 @@ void timerStart(){
 }
 /************************************************************************************************/
 
-void sendValue(uint8_t numberOfLines)
+void sendValue(uint8_t * aByteValue)
 {
 	static uint8_t xorChar = 0xeb;
 	char checksum;
 	// Generate simple error detection checksum
-	checksum = xorChar^numberOfLines;
+	checksum = xorChar^(*aByteValue);
 	// Structure of one packet:
 	//  Start byte
 	//	4 * line byte
 	//	checksum (all xor)
 	//	End byte
 	UART_SendData((uint8_t) ESPL_StartByte);
-	UART_SendData((uint8_t) numberOfLines);
+	UART_SendData((uint8_t) (*aByteValue));
 	UART_SendData((uint8_t) checksum);
 	UART_SendData((uint8_t) ESPL_StopByte);
 }
@@ -667,6 +777,15 @@ static void ReceiveValue()
 					if(checksum==buffer[2])
 					{
 						gReceiving = buffer[1];//sendData(buffer[1])
+//						if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
+//						{
+//							uint8_t response = TWO_PLAYER_REQUEST_VALUE;
+//							if(gSend2PlayerRequestFlag!=false)
+//								{
+//									sendValue(&response);
+//									gSend2PlayerRequestFlag = false;
+//								}
+//						}
 						pos = 0;
 					}
 					else
@@ -679,33 +798,6 @@ static void ReceiveValue()
 					pos = 0;
 				}
 				break;
-//			case 4:
-//			// Check sum
-//			case 5:
-//				buffer[pos] = input;
-//				pos++;
-//				break;
-//			// Last byte should be stop byte
-//			case 6:
-//				if (input == ESPL_StopByte) {
-//					// Check if checksum is accurate
-//					checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4];
-//					// Decode packet to line struct
-//					if (buffer[5] == checksum) {
-//						line.x_1 = buffer[1] / 2;
-//						line.y_1 = buffer[2] / 2;
-//						line.x_2 = buffer[3] / 2;
-//						line.y_2 = buffer[4] / 2;
-//						// Send line to be drawn
-						//xQueueSend(DrawQueue, &line, 100);
-//						pos = 0;
-//					} else {
-//						// Reset buffer
-//						pos = 0;
-//					}
-//				} else {
-//					pos = 0;
-//				}
 		}
 	}
 }

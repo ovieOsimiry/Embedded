@@ -18,14 +18,21 @@
 
 extern char verticalMove;
 extern char rotation;
+//extern int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
 extern int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
-
 void DrawPauseMenu();
-void DrawMainMenu();
+void DrawMainMenu(const joystickselection_t * joystickselection , const playermode_t * playerMode );
 void DrawShapeWithHandle(shape_t * shape);
 void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
 void DrawNextShape(int type, int orientation);
-void DrawGameOver(const joystickselection_t * joystickselection  );
+void DrawGameOver(const joystickselection_t * joystickselection );
+int GetYCoordForButtomOfShape(shape_t * shape);
+void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate);
+void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * xLeft);
+bool_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard);
+
+int CheckForUnRemovableLine();
+void AddLine(int NumOfLines, shape_t * shape);
 
 void InitializeBoardMatrix();
 char GetPeiceType (int pX, int pY);
