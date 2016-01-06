@@ -25,21 +25,4 @@ struct line
 		char y;
 	};
 
-
-
-
-
-static void uartReceive();
-void sendLine(struct coord coord_1, struct coord coord_2);
-static void checkJoystick();
-static void drawTask();
-static void GamePlay();
-static void SystemState();
-void ResetGamePlay();
-void CreateNewPiece();
-void UpdateShape();
-void VApplicationIdleHook();
-void sendValue(uint8_t * aByteValue);
-static void ReceiveValue();
-
 #endif

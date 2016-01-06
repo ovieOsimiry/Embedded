@@ -1,46 +1,36 @@
-#ifndef _DRAW_
-#define _DRAW_
+#ifndef DRAW_H
+#define DRAW_H
 
 #include "includes.h"
 #include "Shape.h"
 
+/*-------------------PLEASE DO NOT EDIT!!!----------------*/
 #define BOARD_POSITION 50
-#define BOARDER_THICKNESS 11
-#define BOARD_WIDTH 110				// Board width in blocks
 #define SCREEN_HEIGHT 240
 #define BOARD_WIDTH_IN_BLOCKS 10	// Board width in blocks
-#define BOARD_HEIGHT_IN_BLOCKS 20
-#define BOARD_OFFSET_Y_AXIS 11		//This is used to allign the display with the board Grid which is set to 10 by 20.
-#define BOARD_OFFSET_X_AXIS 0		//This is used to allign the display with the board Grid which is set to 10 by 20.
-#define BLOCK_SIZE 11
+
+
+#define BOARD_WIDTH (BOARD_WIDTH_IN_BLOCKS * BLOCK_SIZE)// Board width in blocks//110
+#define BOARD_HEIGHT_IN_BLOCKS ((SCREEN_HEIGHT/BLOCK_SIZE)-1)//19//20
+#define BOARD_OFFSET_Y_AXIS 7//11
+
 #define SHAPE_MATRIX_DIMENSION 5
-
-
-extern char verticalMove;
-extern char rotation;
-//extern int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
-extern int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
+#define BLOCK_SIZE 12//can be changed to 11
+#define BOARD_OFFSET_X_AXIS 0 //This is used to align the display with the board Grid which is set to 10 by 20.
+#define BOARDER_THICKNESS 5//11
+/*---------------------------------------------------------------*/
 void DrawPauseMenu();
 void DrawMainMenu(const joystickselection_t * joystickselection , const playermode_t * playerMode );
-void DrawShapeWithHandle(shape_t * shape);
-void DrawBoardMatrix(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
-void DrawNextShape(int type, int orientation);
+void DrawShapeWithHandle(shape_t * ptrShape);
+void DrawGameFrame(shape_t * ptrShape, int lines,int score,int level, int receiving, int sending);//(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
 void DrawGameOver(const joystickselection_t * joystickselection );
-int GetYCoordForButtomOfShape(shape_t * shape);
-void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate);
-void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * xLeft);
-bool_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard);
 
-int CheckForUnRemovableLine();
-void AddLine(int NumOfLines, shape_t * shape);
-
+void AddLine(int NumOfLines, shape_t * ptrShape);
 void InitializeBoardMatrix();
-char GetPeiceType (int pX, int pY);
-boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation);
-bool_t isGameOver();
-void StoreShape (int pX, int pY, int pPiece, int pRotation);
-void DeleteLine (int pY);
+boolean_t IsMoveMentPossible (shape_t * ptrShape);
+boolean_t isGameOver();
+void StoreShape (shape_t * ptrShape);
 int DeletePossibleLines();
-color_t GetColor(char color);
+
 
 #endif

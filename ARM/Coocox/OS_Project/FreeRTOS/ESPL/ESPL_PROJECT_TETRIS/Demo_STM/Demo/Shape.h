@@ -1,28 +1,25 @@
-#ifndef _SHAPE_
-#define _SHAPE_
+#ifndef SHAPE_H
+#define SHAPE_H
 
 #include "includes.h"
 #include <math.h>
 #include "arm_math.h"
-#include "Draw.h"
+//#include "Draw.h"
 
 
 typedef enum {true=1, false=0} boolean_t;
 
 
-char *ShapeContainer[7];
-
-typedef struct _shape_t
+typedef struct //shape_t_
 {
-coord_t  x;
-coord_t  y;
-char * shapeType;
-char * shapeOrientation;
-} shape_t;
-
-
-int PGetXInitialPosition (int pShape, int pRotation);
-int PGetYInitialPosition (int pShape, int pRotation);
-int GetAPeiceFromTheShape(int pShape, int pRotation, int pX, int pY);
+	const char * pArr;//pointer to shape array
+	short x;
+	short y;
+	char shapeOrientation;
+	char(*GetAPeiceFromShape)(const char*, char, short,short);
+	//char(*GetAPeiceFromShape)(void *,short,short);
+}
+shape_t;
+shape_t GetShape(char randomNumber);
 
 #endif

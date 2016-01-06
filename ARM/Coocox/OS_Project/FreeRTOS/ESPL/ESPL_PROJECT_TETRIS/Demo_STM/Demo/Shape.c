@@ -1,5 +1,3 @@
-#ifndef _SHAPE_
-#define _SHAPE_
 #include "Shape.h"
 
 
@@ -12,53 +10,174 @@
  *
  */
 
-char ShapeSquare [4][5][5]; //Structure array that defines the shape of a square
 
-char ShapeI [4][5][5];		//Structure array that defines the I shape.
+static const char Array_Square [4][5][5]; //Structure array that defines the shape of a square
 
-char ShapeL [4][5][5];		//Structure array that defines the L shape.
+static const char Array_I [4][5][5];		//Structure array that defines the I shape.
 
-char ShapeLmirrored [4][5][5];	//Structure array that defines the L reversed shape
+static const char Array_L [4][5][5];		//Structure array that defines the L shape.
 
-char ShapeN [4][5][5];			//Structure array that defines the N shape
+static const char Array_L_Mirrored [4][5][5];	//Structure array that defines the L reversed shape
 
-char ShapeNmirroed [4][5][5];	//Structure array that defines the N reversed shape
+static const char Array_N [4][5][5];			//Structure array that defines the N shape
 
-char ShapeT [4][5][5];			//Structure array that defines the T shape
+static const char Array_N_Mirrored [4][5][5];	//Structure array that defines the N reversed shape
 
-/*------------------------------------Define the container that holds the shapes------------------------*/
-
-char *ShapeContainer[] = {&ShapeSquare,&ShapeI,&ShapeL,&ShapeLmirrored,&ShapeN,&ShapeNmirroed, &ShapeT};
-
-/*------------------------------------Create A container that holds the shapes------------------------*/
-
+static const char Array_T [4][5][5];			//Structure array that defines the T shape
 
 /*-----------------------------------------------------------------------------------------------------
- * int pShape => The shape (0 to 6)
- * int pRotation => The orientation Matrix of the Shape
- * int pX => The Shape matrix
- * int pY => The Shape element
- *----------------------------------------------------------------------------------------------------*/
-int GetAPeiceFromTheShape (int pShape, int pRotation, int pX, int pY)
-{
-	/*This function pulls a single piece from the shape requested
-	 *The Array of pointers holds all the shapes. The shapes are multidimentional arrays
-	 *and they are normally stored in a contigous manner in memory.
-	 *This function works by returning the start address of a particular shape.
-	 *
-	 *Then the constant 25 is multiplied with the pRotation and it creates the offset to select the correct rotation array.
-	 *The constant 5 is multiplied with pX to create the correct offset for the shape matrix.
-	 *The variable pY simple represent the Piece of the shape that we are interested in.
-	 *This is simple the element of the last array.
-	 * */
 
-	return *(ShapeContainer[pShape]+(pRotation*25)+(pX*5)+pY);
+------------------------------------------------------------------------------------------------------*/
+
+char ReturnAnElementFrom3DArray(const char *arr, char shapeOrientation, short X, short Y) {
+	return *(arr + (shapeOrientation*25) + (X*5) + Y);
 }
-/*------------------------------------------------------------------------------------------------------*/
 
-/*-----------------------------------------------Character Array for Shape Shape N----------------------------------------------*/
 
-char ShapeN [4][5][5] =
+//char ReturnAnElementFrom3DArray(shape_t * ptrShape, short X, short Y)
+//{
+//	return *(ptrShape->pArr + (ptrShape->shapeOrientation*25) + (X*5) + Y);
+//}
+
+shape_t shapeN0 = {&Array_N[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeN1 = {&Array_N[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
+shape_t shapeN2 = {&Array_N[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
+shape_t shapeN3 = {&Array_N[0][0][0],3,-2,3,ReturnAnElementFrom3DArray};
+
+
+shape_t shapeNMirrored0 = {&Array_N_Mirrored[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeNMirrored1 = {&Array_N_Mirrored[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
+shape_t shapeNMirrored2 = {&Array_N_Mirrored[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
+shape_t shapeNMirrored3 = {&Array_N_Mirrored[0][0][0],3,-2,3,ReturnAnElementFrom3DArray};
+
+shape_t shapeSquare0 = {&Array_Square[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeSquare1 = {&Array_Square[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeSquare2 = {&Array_Square[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeSquare3 = {&Array_Square[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+
+shape_t shapeI0 = {&Array_I[0][0][0],3,-2,0,ReturnAnElementFrom3DArray};
+shape_t shapeI1 = {&Array_I[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
+shape_t shapeI2 = {&Array_I[0][0][0],3,-2,2,ReturnAnElementFrom3DArray};
+shape_t shapeI3 = {&Array_I[0][0][0],3,-3,3,ReturnAnElementFrom3DArray};
+
+shape_t shapeL0 = {&Array_L[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeL1 = {&Array_L[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
+shape_t shapeL2 = {&Array_L[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
+shape_t shapeL3 = {&Array_L[0][0][0],3,-2,3,ReturnAnElementFrom3DArray};
+
+shape_t shapeLMirrored0 = {&Array_L_Mirrored[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeLMirrored1 = {&Array_L_Mirrored[0][0][0],3,-2,1,ReturnAnElementFrom3DArray};
+shape_t shapeLMirrored2 = {&Array_L_Mirrored[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
+shape_t shapeLMirrored3 = {&Array_L_Mirrored[0][0][0],3,-3,3,ReturnAnElementFrom3DArray};
+
+shape_t shapeT0 = {&Array_T[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
+shape_t shapeT1 = {&Array_T[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
+shape_t shapeT2 = {&Array_T[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
+shape_t shapeT3 = {&Array_T[0][0][0],3,-2,3,ReturnAnElementFrom3DArray};
+
+
+shape_t GetShape(char randomNumber)
+{
+	shape_t * selectedShape;
+
+	switch(randomNumber)
+	{
+	case 0:
+	selectedShape =  &shapeT0;
+	break;
+		case 1:
+		selectedShape = &shapeT1;
+		break;
+	case 2:
+	selectedShape = &shapeT2;
+	break;
+		case 3:
+		selectedShape = &shapeT3;
+		break;
+
+	case 4:
+	selectedShape = &shapeN0;
+	break;
+		case 5:
+		selectedShape = &shapeN1;
+		break;
+	case 6:
+	selectedShape = &shapeN2;
+	break;
+		case 7:
+		selectedShape = &shapeN3;
+		break;
+
+	case 8:
+	selectedShape =  &shapeSquare0;
+	break;
+		case 9:
+		selectedShape = &shapeSquare1;
+		break;
+	case 10:
+	selectedShape = &shapeSquare2;
+	break;
+		case 11:
+		selectedShape = &shapeSquare3;
+		break;
+
+	case 12:
+	selectedShape = &shapeI0;
+	break;
+		case 13:
+		selectedShape = &shapeI1;
+		break;
+	case 14:
+	selectedShape = &shapeI2;
+	break;
+		case 15:
+		selectedShape = &shapeI3;
+		break;
+
+	case 16:
+	selectedShape =  &shapeL0;
+	break;
+		case 17:
+		selectedShape = &shapeL1;
+		break;
+	case 18:
+	selectedShape = &shapeL2;
+	break;
+		case 19:
+		selectedShape = &shapeL3;
+		break;
+
+	case 20:
+	selectedShape = &shapeNMirrored0;
+	break;
+		case 21:
+		selectedShape = &shapeNMirrored1;
+		break;
+	case 22:
+	selectedShape = &shapeNMirrored2;
+	break;
+		case 23:
+		selectedShape = &shapeNMirrored3;
+		break;
+
+	case 24:
+	selectedShape = &shapeLMirrored0;
+	break;
+		case 25:
+		selectedShape = &shapeLMirrored1;
+		break;
+	case 26:
+	selectedShape = &shapeLMirrored2;
+	break;
+		case 27:
+		selectedShape = &shapeLMirrored3;
+		break;
+	}
+	return *selectedShape;
+}
+
+
+static const char Array_N [4][5][5] =
 
   {
    {
@@ -93,7 +212,7 @@ char ShapeN [4][5][5] =
 /*------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------Character Array for Shape N mirrored-------------------------------------------*/
-char ShapeNmirroed [4][5][5] =
+static const char Array_N_Mirrored [4][5][5] =
 
   {
    {
@@ -128,7 +247,7 @@ char ShapeNmirroed [4][5][5] =
 /*------------------------------------------------------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------Character Array for Shape T----------------------------------------------*/
-char ShapeT [4][5][5] =
+static const char Array_T [4][5][5] =
 {
    {
     {0, 0, 0, 0, 0},
@@ -163,7 +282,7 @@ char ShapeT [4][5][5] =
 
 
 /*---------------------------------------Character Array for Shape Square--------------------------*/
-char ShapeSquare [4][5][5] =
+static const char Array_Square [4][5][5] =
 {
    {
     {0, 0, 0, 0, 0},
@@ -197,7 +316,7 @@ char ShapeSquare [4][5][5] =
 /*------------------------------------------------------------------------------------------------------------------*/
 
 /*----------------------------------------------Character Array for Shape I-----------------------------------------*/
-char ShapeI [4][5][5] =
+static const char Array_I [4][5][5] =
 
 {
    {
@@ -233,7 +352,7 @@ char ShapeI [4][5][5] =
 
 
 /*---------------------------------------------------Character Array for Shape L-----------------------------------------------*/
-char ShapeL [4][5][5] =
+static const char Array_L [4][5][5] =
 
   {
    {
@@ -268,7 +387,7 @@ char ShapeL [4][5][5] =
 /*---------------------------------------------------------------------------------------------------------------------------------*/
 
 /*------------------------------------------------Character Array for Shape L mirrored---------------------------------------------*/
-char ShapeLmirrored [4][5][5] =
+static const char Array_L_Mirrored [4][5][5] =
 {
    {
     {0, 0, 0, 0, 0},
@@ -300,75 +419,3 @@ char ShapeLmirrored [4][5][5] =
 					}
 };
 /*-------------------------------------------------------------------------------------------------------------------------------*/
-
-
-
-// Displacement of the piece to the position where it is first drawn in the board when it is created
-int mShapesInitialPosition  [7 /*kind */ ][4 /* rotation */ ][2 /* position */] =
-{
-/* Square */
-  {
-	{-2, -3},
-    {-2, -3},
-    {-2, -3},
-    {-2, -3}
-   },
-/* I */
-  {
-	{-2, -2},
-    {-2, -3},
-    {-2, -2},
-    {-2, -3}
-   },
-/* L */
-  {
-	{-2, -3},
-    {-2, -3},
-    {-2, -3},
-    {-2, -2}
-   },
-/* L mirrored */
-  {
-	{-2, -3},
-    {-2, -2},
-    {-2, -3},
-    {-2, -3}
-   },
-/* N */
-  {
-	{-2, -3},
-    {-2, -3},
-    {-2, -3},
-    {-2, -2}
-   },
-/* N mirrored */
-  {
-	{-2, -3},
-    {-2, -3},
-    {-2, -3},
-    {-2, -2}
-   },
-/* T */
-  {
-	{-2, -3},
-    {-2, -3},
-    {-2, -3},
-    {-2, -2}
-   },
-};
-
-
-
-int pGetXInitialPosition (int pShape, int pRotation)
-{
-	return mShapesInitialPosition [pShape][pRotation][0];
-}
-
-
-int pGetYInitialPosition (int pShape, int pRotation)
-{
-	return mShapesInitialPosition [pShape][pRotation][1];
-}
-
-
-#endif

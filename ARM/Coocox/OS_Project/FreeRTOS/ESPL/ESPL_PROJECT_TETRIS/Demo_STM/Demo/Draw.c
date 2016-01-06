@@ -9,9 +9,23 @@
  */
 
 #include "Draw.h"
+#include "Election.h"
 
 
-int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
+void DrawNextShape(shape_t * ptrShape);
+int GetYCoordForButtomOfShape(shape_t * ptrShape);
+void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate);
+void GetXCoordsForBothSidesOfShape(shape_t * ptrShape, coord_t * xRight, coord_t * xLeft);
+boolean_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard);
+
+void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color);
+
+int CheckForUnRemovableLine();
+char GetPeiceType (int pX, int pY);
+void DeleteLine (int pY);
+color_t GetColor(char color);
+
+static int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
 //int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
 
@@ -28,37 +42,40 @@ void InitializeBoardMatrix()
 /*-------------------------------------------------------------------------------------------------------*/
 
 
-void DrawShapeWithHandle(shape_t * shape)
+void DrawShapeWithHandle(shape_t * ptrShape)
 {
 	color_t mColor;				// Color of the block
-
-	// Obtain the position in pixel in the screen of the block we want to draw
-	int mPixelsX = shape->x;
-	int mPixelsY = shape->y;
 
 	// Travel the matrix of blocks of the piece and draw the blocks that are filled
 	for (int i = 0; i < SHAPE_MATRIX_DIMENSION; i++)
 	{
 		for (int j = 0; j < SHAPE_MATRIX_DIMENSION; j++)
 		{
-			// Get the type of the block and draw it with the correct color
-			switch (GetAPeiceFromTheShape (shape->shapeType, shape->shapeOrientation, j, i))
+			// Get the type of the block and select the right color
+			//switch(ptrShape->GetAPeiceFromShape(ptrShape,j,i))
+			switch(ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j,i))
 			{
-				case 1: mColor = Red; break;	// For each block of the piece except the pivot
-				case 2: mColor = Yellow; break;	// For the pivot
-				case 3: mColor = Green; break;	// For the pivot
-				case 4: mColor = Orange; break;	// For the pivot
+				case 1: mColor = Red; break;	//
+				case 2: mColor = Yellow; break;	//
+				case 3: mColor = Green; break;	//
+				case 4: mColor = Orange; break;	//
 			}
-
-			if (GetAPeiceFromTheShape (shape->shapeType, shape->shapeOrientation, j, i) != 0)
-			gdispFillArea(((mPixelsX+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,((mPixelsY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,mColor);
-
+			//if(ptrShape->GetAPeiceFromShape(ptrShape,j,i))
+			 if(ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j, i) != 0)
+			//gdispFillArea(((mPixelsX+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,((mPixelsY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,mColor);
+			DrawCustomBlock(((ptrShape->x+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS + BOARDER_THICKNESS,((ptrShape->y+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,mColor);
 		}
 	}
 }
 
+void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color)
+{
+	gdispFillArea(x,y,cx,cy,Black);//border of block
+	gdispFillArea(x+2,y+2,cx-2,cy-2,color);//block
+}
+
 //Draws next block to be playable into the <next> box
-void DrawNextShape(int type, int orientation)
+void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
 {
 	color_t mColor;				// Color of the block
 	for (int i = 0; i < SHAPE_MATRIX_DIMENSION; i++)
@@ -66,7 +83,8 @@ void DrawNextShape(int type, int orientation)
 		for (int j = 0; j < SHAPE_MATRIX_DIMENSION; j++)
 		{
 			// Get the type of the block and draw it with the correct color
-			switch (GetAPeiceFromTheShape (type, orientation, j, i))
+			//switch (ptrShape->GetAPeiceFromShape(ptrShape,j,i))
+			switch (ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j,i ))//(GetAPeiceFromTheShape (type, orientation, j, i))
 			{
 				case 1: mColor = Red; break;	// For each block of the piece except the pivot
 				case 2: mColor = Yellow; break;	//
@@ -74,25 +92,29 @@ void DrawNextShape(int type, int orientation)
 				case 4: mColor = Orange; break;	//
 			}
 
-			if (GetAPeiceFromTheShape (type, orientation, j, i) != 0)
-			gdispFillArea(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+175,BLOCK_SIZE,BLOCK_SIZE,mColor);
+			//if (ptrShape->GetAPeiceFromShape(ptrShape,j,i)!= 0)
+			if (ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j,i)!= 0)
+			//gdispFillArea(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+168,BLOCK_SIZE,BLOCK_SIZE,mColor);
+			DrawCustomBlock(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+168,BLOCK_SIZE,BLOCK_SIZE,mColor);
 		}
 	}
 }
 
-void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
+void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int receiving, int sending)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans32*");
 	char blockType = 0;
 	int mX1 = 0;
-	int mX2 = BOARD_WIDTH;
 	int mY = 0;
 
-	gdispFillArea(BOARD_OFFSET_X_AXIS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//left boarder
-	gdispFillArea(BOARD_OFFSET_X_AXIS + BOARD_WIDTH + BOARDER_THICKNESS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//right boarder
-	gdispFillArea(BOARD_OFFSET_X_AXIS,230,(BOARDER_THICKNESS+BOARD_WIDTH+BOARDER_THICKNESS),BOARDER_THICKNESS,Blue);//bottom boarder
+//	gdispFillArea(BOARD_OFFSET_X_AXIS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//left boarder
+//	gdispFillArea(BOARD_OFFSET_X_AXIS + BOARD_WIDTH + BOARDER_THICKNESS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//right boarder
+//	gdispFillArea(BOARD_OFFSET_X_AXIS,230,(BOARDER_THICKNESS+BOARD_WIDTH+BOARDER_THICKNESS),BOARDER_THICKNESS,Blue);//bottom boarder
+
+	gdispFillArea(BOARD_OFFSET_X_AXIS,mY,BOARD_WIDTH+(2*BOARDER_THICKNESS),SCREEN_HEIGHT,Blue);//left boarder
+	gdispFillArea(BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,mY,BOARD_WIDTH,SCREEN_HEIGHT-BOARDER_THICKNESS,Black);//left boarder
 
 	// Drawing the blocks that are already stored in the board
 	mX1 += 1;
@@ -104,7 +126,8 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
 			// Check if the block is filled, if so, draw it
 			blockType = GetPeiceType(i, j);
 			if (blockType!=0)
-				gdispFillArea(((mX1+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS,((mY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,GetColor(blockType));
+				//gdispFillArea(((mX1+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS,((mY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,GetColor(blockType));
+				DrawCustomBlock(((i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,(j * BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,GetColor(blockType));
 
 		}
 	}
@@ -144,7 +167,8 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
     // Print string
     gdispDrawString(170+30, 0+170-5, str, font1, White);
 
-    DrawNextShape(nextShape,nextRotation);
+    //DrawNextShape(nextShape,nextRotation);
+    DrawNextShape(ptrShape);
 
     sprintf(str, "Receiving");
     gdispDrawString(140, 0+20-5, str, font1, White);
@@ -155,8 +179,6 @@ void DrawBoardMatrix(int nextShape,int nextRotation,int lines, int score, int le
     gdispDrawString(140, 0+70-5, str, font1, White);
 	sprintf(str, "%d",sending);
     gdispDrawString(140, 0+80, str, font1, White);
-
-
 }
 
 void DrawMainMenu(const joystickselection_t * joystickselection, const playermode_t * playerMode )
@@ -299,21 +321,22 @@ char GetPeiceType(int pX, int pY)
 	return BoardMatrix [pX][pY];
 }
 
-boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
+boolean_t IsMoveMentPossible (shape_t * ptrShape)
 {
 	// Checks collision with shapes already stored in the board or the board limits
 	// This is just to check the 5x5 blocks of a shape with the appropriate area in the board
 
 	boolean_t status = true;
 	int blocktype = 0;
-	for (int i1 = pX, i2 = 0; i1 < pX + SHAPE_MATRIX_DIMENSION; i1++, i2++)
+	for (int i1 = ptrShape->x, i2 = 0; i1 < ptrShape->x + SHAPE_MATRIX_DIMENSION; i1++, i2++)
 	{
-		for (int j1 = pY, j2 = 0; j1 < pY + SHAPE_MATRIX_DIMENSION; j1++, j2++)
+		for (int j1 = ptrShape->y, j2 = 0; j1 <ptrShape->y + SHAPE_MATRIX_DIMENSION; j1++, j2++)
 		{
 			// Check if the shape is outside the limits of the board
 			if(	i1 < 0 	||	i1 > BOARD_WIDTH_IN_BLOCKS  - 1	|| 	j1 > BOARD_HEIGHT_IN_BLOCKS - 1)
 			{
-				if (GetAPeiceFromTheShape (pShape, pRotation, j2, i2) != 0)
+				//if(ptrShape->GetAPeiceFromShape(ptrShape,j2,i2)!= 0)//
+				if(ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j2, i2) != 0)
 					return false;
 			}
 
@@ -321,7 +344,8 @@ boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
 			if (j1 >= 0)
 			{
 				status = GetPeiceType(i1, j1);
-				blocktype = GetAPeiceFromTheShape (pShape, pRotation, j2, i2);
+				//blockType = ptrShape->GetAPeiceFromShape(ptrShape,j2,i2);//
+				blocktype = ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j2, i2);
 				if ((blocktype != 0) && (status!=0))
 					return false;
 			}
@@ -333,15 +357,16 @@ boolean_t IsMoveMentPossible (int pX, int pY, int pShape, int pRotation)
 }
 
 
-void StoreShape (int pX, int pY, int pShape, int pRotation)
+void StoreShape (shape_t * ptrShape)
 {
 
 	char blockType = 0;
-	for (int i1 = pX, i2 = 0; i1 < pX + SHAPE_MATRIX_DIMENSION; i1++, i2++)
+	for (int i1 = ptrShape->x, i2 = 0; i1 < ptrShape->x + SHAPE_MATRIX_DIMENSION; i1++, i2++)
 	{
-		for (int j1 = pY, j2 = 0; j1 < pY + SHAPE_MATRIX_DIMENSION; j1++, j2++)
+		for (int j1 = ptrShape->y, j2 = 0; j1 < ptrShape->y + SHAPE_MATRIX_DIMENSION; j1++, j2++)
 		{
-			blockType = GetAPeiceFromTheShape (pShape, pRotation, j2, i2);
+			//blockType = ptrShape->GetAPeiceFromShape(ptrShape,j2,i2);
+			blockType = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j2,i2);
 			if (blockType!= 0)
 				BoardMatrix[i1][j1] = blockType;
 		}
@@ -402,23 +427,25 @@ void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordina
 }
 
 
-int GetYCoordForButtomOfShape(shape_t * shape)
+int GetYCoordForButtomOfShape(shape_t * ptrShape)
 {
 	int aPeiceOfShape = 0;
 	for(int x = 4; x>=0; x--)
 	{
 		for(int y = 0; y<=4; y++)
 		{
-			aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
-		if(aPeiceOfShape!=0)
-			return x;
+			//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);
+			aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
+			if(aPeiceOfShape!=0)
+				return x;
 		}
 
 	}
+	return 0;
 }
 
 
-void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * xLeft)
+void GetXCoordsForBothSidesOfShape(shape_t * ptrShape, coord_t * xRight, coord_t * xLeft)
 {
 	int aPeiceOfShape = 0;
 
@@ -426,7 +453,8 @@ void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * 
 	{
 		for(int y = 0; y<=4; y++)
 		{
-			aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
+			//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);//
+			aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
 			if(aPeiceOfShape!=0)
 			{
 				*xLeft = y;
@@ -440,7 +468,8 @@ void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * 
 		{
 			for(int y = 4; y>=0; y--)
 			{
-				aPeiceOfShape = GetAPeiceFromTheShape(shape->shapeType,shape->shapeOrientation,x,y);
+				//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);
+				aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
 				if(aPeiceOfShape!=0)
 				{
 					*xRight = y;
@@ -452,7 +481,7 @@ void GetXCoordsForBothSidesOfShape(shape_t * shape, coord_t * xRight, coord_t * 
 return;
 }
 
-bool_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard)
+boolean_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard)
 	{
 		for(int j=shapeXCoordLeft;j<=shapeXCoordRight;j++)
 		{
@@ -465,7 +494,7 @@ bool_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coor
 		return false;
 	}
 
-void AddLine(int NumOfLines, shape_t * shape)
+void AddLine(int NumOfLines, shape_t * ptrShape)
 {
 	int StartPos;
 	int DistanceBtwShapeAndNewBaseOfBoard;//distance between the bottom of the shape and the new refernece base of the board
@@ -479,13 +508,13 @@ void AddLine(int NumOfLines, shape_t * shape)
 	coord_t shapeXCoordLeft;
 
 	GetHeighestPointOnBoard(&rightXCoordOfHeighestPointOnTheBoard, &leftXCoordOfHeighestPointOnTheBoard, &yCoordOfHeighestPointOnTheBoard);
-	GetXCoordsForBothSidesOfShape(shape,&shapeXCoordRight,&shapeXCoordLeft);
+	GetXCoordsForBothSidesOfShape(ptrShape,&shapeXCoordRight,&shapeXCoordLeft);
 
-	shapeXCoordLeft = shapeXCoordLeft + shape->x;
-	shapeXCoordRight = (shape->x + 4) - shapeXCoordRight;
+	shapeXCoordLeft = shapeXCoordLeft + ptrShape->x;
+	shapeXCoordRight = (ptrShape->x + 4) - shapeXCoordRight;
 
-	baseOfShape = GetYCoordForButtomOfShape(shape);
-	yCoordForBtmOfShape = shape->y + baseOfShape;
+	baseOfShape = GetYCoordForButtomOfShape(ptrShape);
+	yCoordForBtmOfShape = ptrShape->y + baseOfShape;
 	StartPos = CheckForUnRemovableLine();
 
 	DistanceBtwShapeAndNewBaseOfBoard = StartPos - yCoordForBtmOfShape;
@@ -496,14 +525,13 @@ void AddLine(int NumOfLines, shape_t * shape)
 	{
 		if(DistBtwShapeAndHeighestPointOnBoard < NumOfLines)
 		{
-			shape->y = shape->y - (NumOfLines - DistBtwShapeAndHeighestPointOnBoard);
+			ptrShape->y = ptrShape->y - (NumOfLines - DistBtwShapeAndHeighestPointOnBoard);
 		}
 	}
-//	else if(StartPos!= 0)
-//	{
+
 	else if((DistanceBtwShapeAndNewBaseOfBoard) < NumOfLines)
 		{
-			(shape->y) = (shape->y) - (NumOfLines - DistanceBtwShapeAndNewBaseOfBoard);
+			(ptrShape->y) = (ptrShape->y) - (NumOfLines - DistanceBtwShapeAndNewBaseOfBoard);
 		}
 
 	/*------Beginning from the bottom, move each line of block up by a number equal to the number of lines that will be added----*/
@@ -528,7 +556,6 @@ void AddLine(int NumOfLines, shape_t * shape)
 					}
 			}
 	/*--------------------------------------------------------------------------------------------*/
-//	}
 }
 
 
@@ -554,10 +581,8 @@ int DeletePossibleLines ()
 	return numOfLinesFilled;
 }
 
-bool_t isGameOver()
+boolean_t isGameOver()
 {
-	char blockType = 0;
-	int i = 0;
 	if(BoardMatrix[4][0]!=0 || BoardMatrix[5][0]!=0 || BoardMatrix[6][0]!=0)
 		return true;
 	return false;

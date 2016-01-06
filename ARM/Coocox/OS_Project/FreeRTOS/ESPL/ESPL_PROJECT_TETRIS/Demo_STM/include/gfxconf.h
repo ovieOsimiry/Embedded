@@ -35,6 +35,7 @@
 //#define GFX_USE_OS_WIN32		FALSE
 //#define GFX_USE_OS_LINUX		FALSE
 //#define GFX_USE_OS_OSX		FALSE
+#define GFX_USE_OS_FREERTOS		TRUE
 
 /* GFX sub-systems to turn on */
 #define GFX_USE_GDISP			TRUE

@@ -21,20 +21,9 @@
 
 #define HORIZONTAL_CONTROL_MOVE_SPEED 4
 
-int mPosX, mPosY;				// Position of the piece that is falling down
-int mShape, mRotation;
-int mNextPosX, mNextPosY;		// Position of the next piece
-int mNextShape, mNextRotation;	// Kind and rotation of the next piece
-
-int debounce = 0; //Restricts the execution of the IRQ_handler if the debouncing time hasn't expired
-
-
 QueueHandle_t ESPL_RxQueue; // Already defined in ESPL_Functions.h
 SemaphoreHandle_t ESPL_DisplayReady;
 
-
-extern char verticalMove;
-extern char rotation;
 
 typedef struct _joyStickCorrd
 {
@@ -46,15 +35,32 @@ JoyStickCord_t JoyStickVal = {0,0};
 // Stores lines to be drawn
 QueueHandle_t DrawQueue;
 
-
+/*--------------Please put all function prototypes used only within this file here----*/
+void sendLine(struct coord coord_1, struct coord coord_2);
+void ResetGamePlay();
+void CreateNewPiece();
+void VApplicationIdleHook();
+void sendValue(uint8_t * aByteValue);
+int calculateScore(int level, int lines);
+//static void uartReceive();
+static void checkJoystick();
+static void drawTask();
+static void GamePlay();
+static void SystemState();
+static void ReceiveValue();
 /*-----------------Please put all shared global variables here------------------------*/
 
-shape_t Shape;
+
+int mNextShape, mNextRotation;	// Kind and rotation of the next piece
+int debounce = 0; //Restricts the execution of the IRQ_handler if the debouncing time hasn't expired
+
 int gTotalNumberOfLinesCompleted = 0;
 int gGameScore = 0;
 int gDifficultyLevel;
 int gReceiving = 0;
 int gSending = 0;
+shape_t gCurrentShape;
+shape_t gNextShape;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
 joystickselection_t gjoyStickLastSelection = JoyStickNoSelection;
 boolean_t gSelectButtonPressed = false;
@@ -91,7 +97,6 @@ TimerHandle_t xTimers; //Define the de-bouncing timer
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
-	//xNewShapeCreationMutex = xSemaphoreCreateMutex();
 	//Debouncing timer initialization
 	timerInit();
 
@@ -119,32 +124,18 @@ int main() {
 void CreateNewShape()
 {
 	// The new shape
-	mShape		= mNextShape;
-	mRotation	= mNextRotation;
-	mPosX 		= (BOARD_WIDTH_IN_BLOCKS / 2) + pGetXInitialPosition (mShape, mRotation);
-	mPosY 		= pGetYInitialPosition (mShape, mRotation);
+	gCurrentShape = gNextShape;
+
 	int randNum;
 	TM_RNG_Init();
-	randNum = TM_RNG_Get() & 0x7;
-	while(randNum>6)
+	randNum = TM_RNG_Get() & 0x1f;
+	while(randNum>27)
 	{
-		randNum = TM_RNG_Get() & 0x7;
+		randNum = TM_RNG_Get() & 0x1f;
 	}
-	mNextShape 		=  randNum; // (rand() % (max+1-min))+min;
-	randNum = TM_RNG_Get() & 0x7;
-	while(randNum>3)
-	{
-		randNum = TM_RNG_Get() & 0x7;
-	}
-	mNextRotation 	=  randNum; // (rand() % (max+1-min))+min;
+	gNextShape = GetShape(randNum);//compute next shape.
 }
 
-void UpdateShape(){
-	Shape.shapeOrientation = mRotation;
-	Shape.shapeType = mShape;
-	Shape.x = (BOARD_WIDTH_IN_BLOCKS / 2) + pGetXInitialPosition(mShape, mRotation);
-	Shape.y = pGetYInitialPosition (mShape, mRotation);
-}
 
 
 static void SystemState()
@@ -295,16 +286,26 @@ static void SystemState()
 static void GamePlay()
 {
 
-		shape_t * _shape = &Shape;
-		coord_t lastY = 0;
-		const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
+		shape_t * ptrShape = &gCurrentShape;
+		shape_t shapeTemp;// used for temporary calculations
+		//const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
 		const int MAX_DIFFICULTY_LEVEL = 9;
 		const char MAX_TICK = 100;
 		int tick = 0;
 		boolean_t downMovePossible = true;
 		int tempNoOfLines = 0;
+//@-------------------------------------------
+		int randNo;
+		TM_RNG_Init();
+		randNo = TM_RNG_Get() & 0x1f;
+		while(randNo>27)
+		{
+			randNo = TM_RNG_Get() & 0x1f;
+		}
+	    gNextShape = GetShape(randNo);
 		CreateNewShape();
-		UpdateShape();
+//@-------------------------------------------
+
 
 /*--------Initialise global variables used within this task----------------*/
 
@@ -316,7 +317,6 @@ static void GamePlay()
 /*----------------------------------------------Remove after Debugging----------------------------------------------------*/
 		int testingAddLines = 0;
 /*--------------------------------------------------------------------------------------------------------------*/
-
 
 
 	while(1){
@@ -333,15 +333,15 @@ static void GamePlay()
 					switch(gReceiving)
 					{
 						case 1:
-							AddLine(1,_shape);
+							AddLine(1,ptrShape);
 							gReceiving = 0;
 						break;
 						case 2:
-							AddLine(2,_shape);
+							AddLine(2,ptrShape);
 							gReceiving = 0;
 						break;
 						case 4:
-							AddLine(4,_shape);
+							AddLine(4,ptrShape);
 							gReceiving = 0;
 						break;
 					}
@@ -355,18 +355,19 @@ static void GamePlay()
 			if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==3 || getState()==2) ) ||
 				((gjoyStickSelection == JoyStickDown) && (getState()==3  || getState()==2) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
-					lastY = _shape->y;
-					downMovePossible = IsMoveMentPossible (_shape->x, lastY+1, _shape->shapeType, _shape->shapeOrientation);
+					shapeTemp =  *ptrShape;//currentShape;
+					shapeTemp.y = shapeTemp.y + 1;
+					downMovePossible = IsMoveMentPossible(&shapeTemp);//downMovePossible = IsMoveMentPossible(_shape,x, lastY+1);
 					if(downMovePossible==true)
 					{
-						if (_shape->y==20)
-							_shape->y = 0;
+						if (ptrShape->y==20)
+							ptrShape->y = 0;
 						else
-							_shape->y+=1;
+							ptrShape->y+=1;
 					}
 					else
 					{
-						StoreShape(_shape->x, _shape->y, _shape->shapeType, _shape->shapeOrientation);
+						StoreShape(ptrShape);
 						tempNoOfLines = DeletePossibleLines();
 						gTotalNumberOfLinesCompleted += tempNoOfLines;
 						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
@@ -395,16 +396,14 @@ static void GamePlay()
 							}
 
 						if(!isGameOver())
-							{
-								CreateNewShape();
-								UpdateShape();
-							}
+						 {
+							CreateNewShape();//if the game is not over then create a new shape.
+						 }
 						else
 						 {
 							setState(7);
 						 }
 					}
-
 				}
 			else if(getState()==7)
 			{
@@ -435,11 +434,11 @@ static void GamePlay()
  */
 static void drawTask() {
 
-	char str[100]; // Init buffer for message
+//	char str[100]; // Init buffer for message
 	struct line line; // Init buffer for line
 
-	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans32*");
+//	font_t font1; // Load font for ugfx
+//	font1 = gdispOpenFont("DejaVuSans32*");
 	InitializeBoardMatrix();
 	gdispClear(White);
 
@@ -460,15 +459,16 @@ static void drawTask() {
 			DrawMainMenu(&gjoyStickLastSelection, &gPlayerMode);
 		}
 		else if(getState()==3 || getState()==2) {
-			DrawShapeWithHandle(&Shape);
-			DrawBoardMatrix(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
+			//DrawShapeWithHandle(&gCurrentShape);
+			//DrawGameFrame(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
+			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
+			DrawShapeWithHandle(&gCurrentShape);
 		}
 		else if(getState()== 4 || getState() == 5 || getState() == 6){
 			DrawPauseMenu();
 		}
 		else if(getState()==7)
 		{
-			//DrawGameOver(&gjoyStickSelection);
 			DrawGameOver(&gjoyStickLastSelection);
 		}
 
@@ -489,10 +489,6 @@ void ResetGamePlay()
 	gTotalNumberOfLinesCompleted = 0;
 	InitializeBoardMatrix();
 	CreateNewShape();
-	UpdateShape();
-
-//	gSelectButtonPressed = false;
-//	gjoyStickSelection = JoyStickUp;
 }
 
 int calculateScore(int level, int lines)
@@ -565,7 +561,7 @@ void EXTI4_IRQHandler(void)
 			if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
 			{
 				gSelectButtonPressed = 1;
-				debounce == 1;
+				debounce = 1;
 			}
 			/* Clear the EXTI line 0 pending bit */
 		}
@@ -590,20 +586,19 @@ void EXTI9_5_IRQHandler(void)
 		{
 			//if (GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)==0)
 
-			coord_t lastOrientation = 0;
+			shape_t shapeTemp = gCurrentShape;
 			boolean_t rotatePossible = true;
-			lastOrientation = Shape.shapeOrientation;
-			if(lastOrientation==3){
-				lastOrientation = 0;// if we have reached the max value roll it back to zero.
+			if(shapeTemp.shapeOrientation==3){
+				shapeTemp.shapeOrientation = 0;// if we have reached the max value roll it back to zero.
 			}
 			else {
-				lastOrientation = lastOrientation + 1;	//increase the rotation.
+				shapeTemp.shapeOrientation = shapeTemp.shapeOrientation + 1;	//increase the rotation.
 			}
-			rotatePossible = IsMoveMentPossible (Shape.x, Shape.y, Shape.shapeType, lastOrientation);
+			rotatePossible = IsMoveMentPossible (&shapeTemp);
 
 			if(rotatePossible==true)//if rotation is possible then assign it to the new rotation
 			{
-				Shape.shapeOrientation = lastOrientation;
+				gCurrentShape.shapeOrientation = shapeTemp.shapeOrientation;
 			}
 			debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires
 		}
@@ -619,39 +614,28 @@ void EXTI9_5_IRQHandler(void)
 static void checkJoystick() {
 		TickType_t xLastWakeTime;
 		xLastWakeTime = xTaskGetTickCount();
-		struct coord joystick_now = { 0, 0 }, joystick_last = { 0, 0 };
-
-		unsigned int X_sensitivity = 0;
-		unsigned int Y_sensitivity = 0;
-
-
-		coord_t lastX = 0;
-		coord_t lastY = 0;
+		struct coord joystick_now = { 0, 0 };
 		boolean_t movePossible = true;
-		shape_t * _shape = &Shape;
-//		boolean_t shapeDownMovementSpeedGaurd = false;
+		shape_t * ptrShape = &gCurrentShape;
+		shape_t shapeTemp;
 		int leftMove = 0;
 		int rightMove = 0;
-		lastX = Shape.x;
-		boolean_t downMovePossible = true;
-		int temp = 0;
 
 		while (TRUE) {
-			// Remember last joystick values
-			joystick_last = joystick_now;
+
 			joystick_now.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joystick_now.y = (uint8_t) 255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
-			//##
-			lastX = Shape.x;
+
+			shapeTemp = *ptrShape;//make a temporary copy of the shape
 			if(joystick_now.x > 150)
 			{
 				if(rightMove==HORIZONTAL_CONTROL_MOVE_SPEED)
 				{
 					rightMove = 0;
-					lastX = lastX + 1;//if we have not reached the max value the increase.
-				movePossible = IsMoveMentPossible (lastX, Shape.y, Shape.shapeType, Shape.shapeOrientation);
+					shapeTemp.x = shapeTemp.x + 1;//if we have not reached the max value the increase.
+				movePossible = IsMoveMentPossible (&shapeTemp);
 				if(movePossible==true)
-					Shape.x = lastX;
+					ptrShape->x = shapeTemp.x;
 				}
 				else
 					++rightMove;
@@ -662,10 +646,10 @@ static void checkJoystick() {
 				if(leftMove==HORIZONTAL_CONTROL_MOVE_SPEED)
 				{
 				leftMove = 0;
-				lastX = lastX - 1;//if we have not reached the min value then decrease.
-				movePossible = IsMoveMentPossible (lastX, Shape.y, Shape.shapeType, Shape.shapeOrientation);
+				shapeTemp.x = shapeTemp.x - 1;//lastX = lastX - 1;//if we have not reached the min value then decrease.
+				movePossible = IsMoveMentPossible (&shapeTemp);
 				if(movePossible==true)
-					Shape.x = lastX;
+					ptrShape->x = shapeTemp.x;
 				}else
 				{
 					++leftMove;
@@ -688,9 +672,6 @@ static void checkJoystick() {
 				gShapeDownMovementSpeedGaurd=true;
 				gjoyStickSelection = JoyStickNoSelection;
 			}
-			// Send over UART
-			//sendLine(joystick_last, joystick_now);
-			// Execute every 20 Ticks
 			vTaskDelayUntil(&xLastWakeTime, 20);
 		}
 	}
@@ -748,7 +729,7 @@ static void ReceiveValue()
 	uint8_t pos = 0;
 	char checksum;
 	char buffer[3]; // Start byte,4* line byte, checksum (all xor), End byte
-	struct line line;
+	//struct line line;
 	while (TRUE)
 	 {
 		// wait for data in queue
@@ -826,58 +807,58 @@ void sendLine(struct coord coord_1, struct coord coord_2) {
 /*
  * Task which receives data via UART and decodes it.
  */
-static void uartReceive() {
-	char input;
-	uint8_t pos = 0;
-	char checksum;
-	char buffer[7]; // Start byte,4* line byte, checksum (all xor), End byte
-	struct line line;
-	while (TRUE) {
-		// wait for data in queue
-		xQueueReceive(ESPL_RxQueue, &input, portMAX_DELAY);
-		// decode package by buffer position
-		switch (pos) {
-			// start byte
-			case 0:
-				if (input == ESPL_StartByte) {
-					buffer[0] = input;
-					pos = 1;
-				}
-				break;
-			// line bytes
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-			// Check sum
-			case 5:
-				buffer[pos] = input;
-				pos++;
-				break;
-			// Last byte should be stop byte
-			case 6:
-				if (input == ESPL_StopByte) {
-					// Check if checksum is accurate
-					checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4];
-					// Decode packet to line struct
-					if (buffer[5] == checksum) {
-						line.x_1 = buffer[1] / 2;
-						line.y_1 = buffer[2] / 2;
-						line.x_2 = buffer[3] / 2;
-						line.y_2 = buffer[4] / 2;
-						// Send line to be drawn
-						xQueueSend(DrawQueue, &line, 100);
-						pos = 0;
-					} else {
-						// Reset buffer
-						pos = 0;
-					}
-				} else {
-					pos = 0;
-				}
-		}
-	}
-}
+//static void uartReceive() {
+//	char input;
+//	uint8_t pos = 0;
+//	char checksum;
+//	char buffer[7]; // Start byte,4* line byte, checksum (all xor), End byte
+//	struct line line;
+//	while (TRUE) {
+//		// wait for data in queue
+//		xQueueReceive(ESPL_RxQueue, &input, portMAX_DELAY);
+//		// decode package by buffer position
+//		switch (pos) {
+//			// start byte
+//			case 0:
+//				if (input == ESPL_StartByte) {
+//					buffer[0] = input;
+//					pos = 1;
+//				}
+//				break;
+//			// line bytes
+//			case 1:
+//			case 2:
+//			case 3:
+//			case 4:
+//			// Check sum
+//			case 5:
+//				buffer[pos] = input;
+//				pos++;
+//				break;
+//			// Last byte should be stop byte
+//			case 6:
+//				if (input == ESPL_StopByte) {
+//					// Check if checksum is accurate
+//					checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4];
+//					// Decode packet to line struct
+//					if (buffer[5] == checksum) {
+//						line.x_1 = buffer[1] / 2;
+//						line.y_1 = buffer[2] / 2;
+//						line.x_2 = buffer[3] / 2;
+//						line.y_2 = buffer[4] / 2;
+//						// Send line to be drawn
+//						xQueueSend(DrawQueue, &line, 100);
+//						pos = 0;
+//					} else {
+//						// Reset buffer
+//						pos = 0;
+//					}
+//				} else {
+//					pos = 0;
+//				}
+//		}
+//	}
+//}
 
 /**
  * Idle hook, definition is needed for FreeRTOS to function.

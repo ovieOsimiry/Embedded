@@ -1,5 +1,3 @@
-#ifndef _ELECTION_
-#define _ELECTION_
 #include "Election.h"
 
 /* 4 possible numbers.
@@ -20,5 +18,3 @@ int getState(){
 void setState(int state1){
 	state = state1;
 }
-
-#endif

@@ -21,10 +21,10 @@
 		#warning "GOS: No Operating System has been defined. ChibiOS (GFX_USE_OS_CHIBIOS) has been turned on for you."
 	#endif
 //##
-#undef GFX_USE_OS_FREERTOS
-#define GFX_USE_OS_FREERTOS	TRUE
-//	#undef GFX_USE_OS_CHIBIOS
-//	#define GFX_USE_OS_CHIBIOS	TRUE
+//#undef GFX_USE_OS_FREERTOS
+//#define GFX_USE_OS_FREERTOS	TRUE
+//#undef GFX_USE_OS_CHIBIOS
+#define GFX_USE_OS_CHIBIOS	TRUE
 #endif
 
 #if GFX_USE_OS_CHIBIOS + GFX_USE_OS_WIN32 + GFX_USE_OS_LINUX + GFX_USE_OS_OSX + GFX_USE_OS_RAW32 + GFX_USE_OS_FREERTOS != 1 * TRUE
