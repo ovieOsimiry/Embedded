@@ -83,7 +83,8 @@ uint32_t gDifficultyCheckPoint;
 
 /*------------------------------Semaphores/Mutexs-------------------------------------*/
 
-//SemaphoreHandle_t xNewShapeCreationMutex;
+//SemaphoreHandle_t gSynchroSemaphore;
+static TaskHandle_t gTaskSynchroNotification = NULL;
 
 /*---------------------------------------Timers---------------------------------------*/
 TimerHandle_t xTimers; //Define the de-bouncing timer
@@ -105,7 +106,6 @@ int main() {
 	//Initialites states of the game
 	startState();
 
-
 	// Initializes Draw Queue with 100 lines buffer
 	DrawQueue = xQueueCreate(100, 4 * sizeof(char));
 
@@ -114,7 +114,7 @@ int main() {
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	//xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
 	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 2, NULL);
-	xTaskCreate(GamePlay, "GamePlay", 1000, NULL, 3, NULL);
+	xTaskCreate(GamePlay, "GamePlay", 1000, NULL, 3, &gTaskSynchroNotification);
 	xTaskCreate(SystemState, "SystemState", 1000, NULL, 3, NULL);
 
 	// Start FreeRTOS Scheduler
@@ -143,7 +143,7 @@ void CreateNewShape()
 static void SystemState()
 {
 	TickType_t _debounceDelay = 300;
-	/*------------------------Initialise all variables used within this task----------------*/
+	/*------------------------Initialize all variables used within this task----------------*/
 	gPlayerMode = onePlayerMode;
     gjoyStickLastSelection = JoyStickUp;
     gSelectButtonPressed = 0;
@@ -159,6 +159,7 @@ static void SystemState()
 			{
 				case stateMainMenu:
 					maxMenuCount = 1;
+
 					if(gjoyStickSelection == JoyStickUp)
 						{
 						   gPlayerMode = onePlayerMode;
@@ -227,11 +228,17 @@ static void SystemState()
 				case stateGame1Player:
 					gSelectButtonPressed = 0;
 					lastState = stateGame1Player;
+					//We wake up the Gameplay task if we are in state 2 (gaming screen in two player mode)
+					xTaskNotifyGive(gTaskSynchroNotification);
+
 				break;
 
 				case stateGame2Player:
 					gSelectButtonPressed = 0;
 					lastState = stateGame2Player;
+					//We wake up the Gameplay task if we are in state 3 (gaming screen in one player mode)
+					xTaskNotifyGive(gTaskSynchroNotification);
+
 				break;
 				case stateGamePaused:
 					maxMenuCount = 2;
@@ -352,7 +359,7 @@ static void SystemState()
 
 			}
 
-			vTaskDelay(100);
+			vTaskDelay(10); //Without task notification synchronization the delay would be 100
 	}
 }
 
@@ -394,6 +401,9 @@ static void GamePlay()
 
 
 	while(1){
+				//Make the loop wait until the task notification from the SystemState task is released
+				ulTaskNotifyTake( pdTRUE, portMAX_DELAY);
+
 				vTaskDelay(10);
 				if(gTotalNumberOfLinesCompleted >= gDifficultyCheckPoint)
 				{
@@ -426,8 +436,10 @@ static void GamePlay()
 				else
 					tick++;
 
-			if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==stateGame1Player || getState()==stateGame2Player) ) ||
-				((gjoyStickSelection == JoyStickDown) && (getState()==stateGame1Player  || getState()==stateGame2Player) && (gShapeDownMovementSpeedGaurd == true) ))
+			//if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==3 || getState()==2) ) ||
+			//	((gjoyStickSelection == JoyStickDown) && (getState()==3  || getState()==2) && (gShapeDownMovementSpeedGaurd == true) ))
+				if( (tick==(MAX_TICK/(gDifficultyLevel+1))) ||
+				((gjoyStickSelection == JoyStickDown) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
 					shapeTemp =  *ptrShape;//currentShape;
 					shapeTemp.y = shapeTemp.y + 1;
@@ -504,7 +516,7 @@ static void GamePlay()
 
 
 /**
- * Example task which draws to the display.
+ * Task which draws to the display.
  */
 static void drawTask() {
 
@@ -730,16 +742,16 @@ static void checkJoystick() {
 				}
 			}
 
-			if(joystick_now.y > 135) //Joy stick is moved downwards.
+			if(joystick_now.y > 135) //Joystick is moved downwards.
 			{
 				gjoyStickSelection = JoyStickDown;
-				//else vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
-
+				//#if(getState()!=3 && getState()!=2) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
-			else if((joystick_now.y < 110))//joystick moved upwards
+			else if((joystick_now.y < 110))//Joystick moved upwards
 			{
 				gjoyStickSelection = JoyStickUp;
 				//#if(getState!=3) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
+				//#if(getState()!=3 && getState()!=2) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
 			else
 			{
@@ -769,7 +781,7 @@ void timerInit(){
 	xTimerStop(xTimers, 0);
 
 }
-
+//Function that reset the debounce timer
 void timerStart(){
 	//Reset the timer
 	xTimerReset(xTimers, 0);
