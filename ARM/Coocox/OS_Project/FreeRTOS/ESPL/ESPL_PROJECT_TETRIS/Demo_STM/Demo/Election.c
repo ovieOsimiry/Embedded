@@ -6,15 +6,15 @@
 3 inside 1 Player mode
 4 inside 2 Player mode*/
 
-int state;
+static systemState_t currentState;
 
 void startState(){
-	state = 1;
+	currentState = stateMainMenu;//1;
 }
 
-int getState(){
-	return state;
+systemState_t getState(){
+	return currentState;
 }
-void setState(int state1){
-	state = state1;
+void setState(systemState_t newState){
+	currentState = newState;
 }

@@ -181,7 +181,7 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
     gdispDrawString(140, 0+80, str, font1, White);
 }
 
-void DrawMainMenu(const joystickselection_t * joystickselection, const playermode_t * playerMode )
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode )//(const joystickselection_t * joystickselection, const playermode_t * playerMode )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -193,12 +193,12 @@ void DrawMainMenu(const joystickselection_t * joystickselection, const playermod
 	gdispDrawString(30, 5, str, font1, White);
 
 
-	if(*joystickselection==JoyStickUp)//if(getState()==1)
+	if(*gSelectionArrowPosition==0)////if(*joystickselection==JoyStickUp)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 30, str, font1, White);
 	}
-	if(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
+	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)//(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 60, str, font1, White);
@@ -219,7 +219,7 @@ void DrawMainMenu(const joystickselection_t * joystickselection, const playermod
 }
 
 
-void DrawGameOver(const joystickselection_t * joystickselection  )
+void DrawGameOver(const uint8_t * gSelectionArrowPosition)//(const joystickselection_t * joystickselection  )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -231,12 +231,12 @@ void DrawGameOver(const joystickselection_t * joystickselection  )
 	gdispDrawString(140, 5, str, font1, White);
 
 
-	if(*joystickselection==JoyStickUp)
+	if(*gSelectionArrowPosition==0)//(*joystickselection==JoyStickUp)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 30, str, font1, White);
 	}
-	if(*joystickselection==JoyStickDown)
+	if(*gSelectionArrowPosition==1)//(*joystickselection==JoyStickDown)
 	{
 		sprintf(str, "->");
 		gdispDrawString(20, 60, str, font1, White);
@@ -252,7 +252,7 @@ void DrawGameOver(const joystickselection_t * joystickselection  )
 	gdispDrawString(30, 120, str, font1, White);
 }
 
-void DrawPauseMenu(){
+void DrawPauseMenu(uint8_t * selectionArrowPosition){
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
 
@@ -262,15 +262,19 @@ void DrawPauseMenu(){
 	sprintf(str, "PAUSE");
 	gdispDrawString(140, 5, str, font1, White);
 
-	if(getState() == 4){
+	//if(getState() == 4)
+	if(*selectionArrowPosition==0)
+	{
 		sprintf(str, "->");
 		gdispDrawString(20, 30, str, font1, White);
 	}
-	else if(getState() == 5){
+	else if(*selectionArrowPosition==1)//else if(getState() == 5)
+	{
 			sprintf(str, "->");
 			gdispDrawString(20, 60, str, font1, White);
 	}
-	else if(getState() == 6){
+	else if(*selectionArrowPosition==2)//else if(getState() == 6)
+	{
 			sprintf(str, "->");
 			gdispDrawString(20, 90, str, font1, White);
 	}

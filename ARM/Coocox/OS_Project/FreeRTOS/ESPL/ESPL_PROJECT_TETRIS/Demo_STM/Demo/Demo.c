@@ -40,7 +40,8 @@ void sendLine(struct coord coord_1, struct coord coord_2);
 void ResetGamePlay();
 void CreateNewPiece();
 void VApplicationIdleHook();
-void sendValue(uint8_t * aByteValue);
+//void sendValue(uint8_t * aByteValue);
+void sendValue(uint32_t * anIntegerValue);
 int calculateScore(int level, int lines);
 //static void uartReceive();
 static void checkJoystick();
@@ -59,6 +60,7 @@ int gGameScore = 0;
 int gDifficultyLevel;
 int gReceiving = 0;
 int gSending = 0;
+uint8_t gSelectionArrowPosition = 0;
 shape_t gCurrentShape;
 shape_t gNextShape;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
@@ -147,6 +149,7 @@ static void SystemState()
     gSelectButtonPressed = 0;
     gReceiving = 0;
     gSend2PlayerRequestFlag = true;
+    uint8_t maxMenuCount = 0;
     int lastState;
     /*---------------------------------------------------------------------------------------*/
 	while(1)
@@ -154,126 +157,197 @@ static void SystemState()
 
 			switch(getState())
 			{
-				case 1:
-
+				case stateMainMenu:
+					maxMenuCount = 1;
 					if(gjoyStickSelection == JoyStickUp)
 						{
 						   gPlayerMode = onePlayerMode;
 						   gReceiving = 0;
-						   gjoyStickLastSelection = JoyStickUp;
+						  // gjoyStickLastSelection = JoyStickUp;
+						   if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							{
+								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
+								if(gSelectionArrowPosition!=0)
+								{
+									--gSelectionArrowPosition;//--selectionArrowPosition;
+								}
+								gjoyStickLastSelection = JoyStickUp;
+							}
 						}
 					else if(gjoyStickSelection == JoyStickDown)
 						{
-							uint8_t request = TWO_PLAYER_REQUEST_VALUE;
+							uint32_t request = TWO_PLAYER_REQUEST_VALUE;
 						    gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
 							sendValue(&request);
-							//vTaskDelay(5);// wait for response to come.
 							if(gReceiving == TWO_PLAYER_REQUEST_VALUE)
 							{
 								gPlayerMode = twoPlayerMode;
 								gjoyStickLastSelection = JoyStickDown;
 								gReceiving = 0;//reset received value
+
+								{
+									if(gSelectionArrowPosition!=maxMenuCount)
+									{
+										++gSelectionArrowPosition;//--selectionArrowPosition;
+									}
+									//gjoyStickLastSelection = JoyStickDown;
+								}
 							}
 						}
 					else//(gjoyStickSelection==JoyStickNoSelection)
 						{
-							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)// && gSend2PlayerRequestFlag == true)
+						gjoyStickLastSelection=JoyStickNoSelection;
+							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
 							 {
-								uint8_t response = TWO_PLAYER_REQUEST_VALUE;
+								uint32_t response = TWO_PLAYER_REQUEST_VALUE;
 								gReceiving = 0;
 								sendValue(&response);
 								gSend2PlayerRequestFlag = false;
 							 }
 						}
-						//if(gjoyStickLastSelection==JoyStickUp){setState(1);}// gjoyStickSelection = JoyStickNoSelection;}
-						if (gSelectButtonPressed && gjoyStickLastSelection == JoyStickDown)
+						if (gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection == JoyStickDown)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 							gReceiving = 0;
-							setState(2);
-						} // gjoyStickLastSelection=JoyStickNoSelection;}
+							setState(stateGame1Player);//setState(3); //1 player mode
+							gSelectionArrowPosition = 0;
+						}
 
-						if (gSelectButtonPressed && gjoyStickLastSelection == JoyStickUp)
+						if (gSelectButtonPressed && gSelectionArrowPosition==1)//gjoyStickLastSelection == JoyStickUp)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 							gReceiving = 0;
-							setState(3);
+							setState(stateGame2Player);//setState(2);//2 player mode
+							gSelectionArrowPosition = 0;
 						}
 				break;
 
-				case 2:
+				case stateGame1Player:
 					gSelectButtonPressed = 0;
-					lastState = 2;
+					lastState = stateGame1Player;
 				break;
 
-				case 3:
+				case stateGame2Player:
 					gSelectButtonPressed = 0;
-					lastState = 3;
+					lastState = stateGame2Player;
 				break;
+				case stateGamePaused:
+					maxMenuCount = 2;
+					if(gjoyStickSelection == JoyStickUp)
+						{
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							{
+								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
+								if(gSelectionArrowPosition!=0)
+								{
+									--gSelectionArrowPosition;//--selectionArrowPosition;
+								}
+								gjoyStickLastSelection = JoyStickUp;
+							}
+						}
+					else if(gjoyStickSelection == JoyStickDown)
+						{
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							{
+								gjoyStickLastSelection = JoyStickDown;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
+								if(gSelectionArrowPosition!=maxMenuCount)
+								{
+									++gSelectionArrowPosition;
+								}
+							}
+						}
+					else
+						{
+							gjoyStickLastSelection = JoyStickNoSelection;
+						}
+						if (gSelectButtonPressed && gSelectionArrowPosition == 0)
+						{
+							vTaskDelay(_debounceDelay);//wait for the button to settle
+							gSelectButtonPressed = 0;
+							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
+							if(lastState==stateGame1Player)
+								setState(stateGame1Player);
+							else if(lastState==stateGame2Player)
+								setState(stateGame2Player);
+						}
 
-				case 4:
-					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
-					else if(gjoyStickSelection==JoyStickDown) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed)
+						if (gSelectButtonPressed && gSelectionArrowPosition == 1)
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectButtonPressed = 0;
+							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
+							if(lastState==stateGame1Player)
+								setState(stateGame1Player);
+							else if(lastState==stateGame2Player)
+								setState(stateGame2Player);
+							ResetGamePlay(); //restart the game
+						}
+
+						if (gSelectButtonPressed && gSelectionArrowPosition == 2)
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
+							ResetGamePlay();
+							gSelectButtonPressed = 0;
+							setState(stateMainMenu);
+						}
+				break;
+				case stateGameOver:
+					maxMenuCount = 1;
+
+//					if(gjoyStickSelection==JoyStickUp)
+//						gjoyStickLastSelection =JoyStickUp ;
+//					if(gjoyStickSelection==JoyStickDown)
+//						gjoyStickLastSelection = JoyStickDown;
+
+					if(gjoyStickSelection == JoyStickUp)
+						{
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							{
+								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
+								if(gSelectionArrowPosition!=0)
+								{
+									--gSelectionArrowPosition;//--selectionArrowPosition;
+								}
+								gjoyStickLastSelection = JoyStickUp;
+							}
+						}
+					else if(gjoyStickSelection == JoyStickDown)
+						{
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							{
+								gjoyStickLastSelection = JoyStickDown;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
+								if(gSelectionArrowPosition!=maxMenuCount)
+								{
+									++gSelectionArrowPosition;
+								}
+							}
+						}
+					else
+						{
+							gjoyStickLastSelection = JoyStickNoSelection;
+						}
+
+
+
+					if(gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection==JoyStickUp)//restart game
 					{
-						if(lastState==3)
-							setState(3);
-						else if(lastState==2)
-							setState(2);
-						gSelectButtonPressed = 0;
-					};
-				break;
-
-				case 5:
-					if(gjoyStickSelection==JoyStickUp) {setState(4); gjoyStickSelection = JoyStickNoSelection;}
-					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed) {
-						vTaskDelay(_debounceDelay);
-						ResetGamePlay();
-						if(lastState==3)
-							setState(3);
-						else if(lastState==2)
-							setState(2);
-						gSelectButtonPressed = 0;
-					};
-				break;
-
-				case 6:
-					if(gjoyStickSelection==JoyStickUp) {setState(5); gjoyStickSelection = JoyStickNoSelection;}
-					else if(gjoyStickSelection==JoyStickDown) {setState(6); gjoyStickSelection = JoyStickNoSelection;}
-					if(gSelectButtonPressed)
-					{
-						vTaskDelay(_debounceDelay);
-						ResetGamePlay();
-						gSelectButtonPressed = 0;
-						setState(1);
-					};
-				break;
-
-
-				case 7:
-					if(gjoyStickSelection==JoyStickUp)
-						gjoyStickLastSelection =JoyStickUp ;
-					if(gjoyStickSelection==JoyStickDown)
-						gjoyStickLastSelection = JoyStickDown;
-					if(gSelectButtonPressed && gjoyStickLastSelection==JoyStickUp)//restart game
-					{
 						vTaskDelay(_debounceDelay);
 						gSelectButtonPressed = 0;
 
-						if(lastState==3)
-							setState(3);
-						else if(lastState==2)
-							setState(2);
+						if(lastState==stateGame1Player)
+							setState(stateGame1Player);
+						else if(lastState==stateGame2Player)
+							setState(stateGame2Player);
 					}
-					if(gSelectButtonPressed && gjoyStickLastSelection==JoyStickDown)//go to main menu
+					if(gSelectButtonPressed && gSelectionArrowPosition == 1)//gjoyStickLastSelection==JoyStickDown)//go to main menu
 					{
 						vTaskDelay(_debounceDelay);
 						gSelectButtonPressed = 0;
 						gjoyStickLastSelection=JoyStickUp;
-						setState(1);
+						setState(stateMainMenu);
 					}
 
 			}
@@ -328,7 +402,7 @@ static void GamePlay()
 					 ++gDifficultyLevel;
 				}
 
-				if(getState() == 2) //if we are in 2 player mode, when lines are sent add them.
+				if(getState() == stateGame2Player) //if we are in 2 player mode, when lines are sent add them.
 				{
 					switch(gReceiving)
 					{
@@ -352,8 +426,8 @@ static void GamePlay()
 				else
 					tick++;
 
-			if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==3 || getState()==2) ) ||
-				((gjoyStickSelection == JoyStickDown) && (getState()==3  || getState()==2) && (gShapeDownMovementSpeedGaurd == true) ))
+			if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==stateGame1Player || getState()==stateGame2Player) ) ||
+				((gjoyStickSelection == JoyStickDown) && (getState()==stateGame1Player  || getState()==stateGame2Player) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
 					shapeTemp =  *ptrShape;//currentShape;
 					shapeTemp.y = shapeTemp.y + 1;
@@ -372,9 +446,9 @@ static void GamePlay()
 						gTotalNumberOfLinesCompleted += tempNoOfLines;
 						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
 						gShapeDownMovementSpeedGaurd=false;
-						if(tempNoOfLines>=1 && getState()==2)
+						if(tempNoOfLines>=1 && getState()==stateGame2Player)
 							{
-								uint8_t temp;
+								uint32_t temp;
 								switch(tempNoOfLines)
 								{
 								case 2:
@@ -401,11 +475,11 @@ static void GamePlay()
 						 }
 						else
 						 {
-							setState(7);
+							setState(stateGameOver);
 						 }
 					}
 				}
-			else if(getState()==7)
+			else if(getState()==stateGameOver)
 			{
 				ResetGamePlay();
 				tempNoOfLines = 0;//reset temporary local variables within the task.
@@ -454,22 +528,22 @@ static void drawTask() {
 
 		//DrawShape (BOARD_WIDTH/2*BLOCK_SIZE, verticalMove*BLOCK_SIZE, 5, rotation);
 
-		if(getState()==1)
+		if(getState()==stateMainMenu)
 		{
-			DrawMainMenu(&gjoyStickLastSelection, &gPlayerMode);
+			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode);
 		}
-		else if(getState()==3 || getState()==2) {
+		else if(getState()==stateGame1Player || getState()==stateGame2Player) {
 			//DrawShapeWithHandle(&gCurrentShape);
 			//DrawGameFrame(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 			DrawShapeWithHandle(&gCurrentShape);
 		}
-		else if(getState()== 4 || getState() == 5 || getState() == 6){
-			DrawPauseMenu();
+		else if(getState()== stateGamePaused){// || getState() == 5 || getState() == 6){
+			DrawPauseMenu(&gSelectionArrowPosition);
 		}
-		else if(getState()==7)
+		else if(getState()==stateGameOver)
 		{
-			DrawGameOver(&gjoyStickLastSelection);
+			DrawGameOver(&gSelectionArrowPosition);//(&gjoyStickLastSelection);
 		}
 
 		// Wait for display to stop writing
@@ -522,9 +596,9 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
 			  /* Button E will Reset all counters */
 			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
-				  if(getState()!=1)// && getState() != 2)
+				  if(getState()!=stateMainMenu)// && getState() != 2)
 				  {
-					  setState(4);
+					  setState(stateGamePaused);
 				  	  debounce = 1;
 				  }
 			  }
@@ -665,7 +739,7 @@ static void checkJoystick() {
 			else if((joystick_now.y < 110))//joystick moved upwards
 			{
 				gjoyStickSelection = JoyStickUp;
-				if(getState!=3) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
+				//#if(getState!=3) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
 			else
 			{
@@ -702,19 +776,30 @@ void timerStart(){
 }
 /************************************************************************************************/
 
-void sendValue(uint8_t * aByteValue)
+void sendValue(uint32_t * anIntegerValue)
 {
-	static uint8_t xorChar = 0xeb;
+	//static uint8_t xorChar = 0xeb;
+	uint8_t bytes[4];
 	char checksum;
+
+	bytes[3] = (*anIntegerValue >> 24) & 0xFF;
+	bytes[2] = (*anIntegerValue >> 16) & 0xFF;
+	bytes[1] = (*anIntegerValue >> 8) & 0xFF;
+	bytes[0] = *anIntegerValue & 0xFF;
 	// Generate simple error detection checksum
-	checksum = xorChar^(*aByteValue);
+	//checksum = xorChar^(*aByteValue);
+	checksum = bytes[3] ^ bytes[2] ^ bytes[1] ^ bytes[0];
 	// Structure of one packet:
 	//  Start byte
 	//	4 * line byte
 	//	checksum (all xor)
 	//	End byte
 	UART_SendData((uint8_t) ESPL_StartByte);
-	UART_SendData((uint8_t) (*aByteValue));
+	//UART_SendData((uint8_t) (*aByteValue));
+	UART_SendData((uint8_t) (bytes[0]));
+	UART_SendData((uint8_t) (bytes[1]));
+	UART_SendData((uint8_t) (bytes[2]));
+	UART_SendData((uint8_t) (bytes[3]));
 	UART_SendData((uint8_t) checksum);
 	UART_SendData((uint8_t) ESPL_StopByte);
 }
@@ -725,10 +810,10 @@ void sendValue(uint8_t * aByteValue)
 static void ReceiveValue()
 {
 	char input;
-	static uint8_t xorChar = 0xeb;
+	//static uint8_t xorChar = 0xeb;
 	uint8_t pos = 0;
 	char checksum;
-	char buffer[3]; // Start byte,4* line byte, checksum (all xor), End byte
+	char buffer[7]; // Start byte,4* line byte, checksum (all xor), End byte
 	//struct line line;
 	while (TRUE)
 	 {
@@ -745,28 +830,33 @@ static void ReceiveValue()
 				break;
 			// line bytes
 			case 1:
-				buffer[1] = input; //value sent from other device.
-				pos = 2;
+				buffer[1] = input; //first byte sent from other device.
+				pos = 2; //set it to check for next byte
 				break;
 			case 2:
-				buffer[2] = input; //checksum value.
-				pos = 3;
+				buffer[2] = input; //second byte sent from other device.
+				pos = 3; //set it to check for next byte
 				break;
 			case 3:
+				buffer[3] = input; //third byte sent from other device.
+				pos = 4;//set it to check for next byte
+				break;
+			case 4:
+				buffer[4] = input; //third byte sent from other device.
+				pos = 5; //set it to check for next byte
+				break;
+			case 5:
+				buffer[5] = input; //checksum value.
+				pos = 6;
+				break;
+			case 6:
 				if (input == ESPL_StopByte){
-					checksum = xorChar ^ buffer[1];
-					if(checksum==buffer[2])
+					//checksum = xorChar ^ buffer[1];
+					checksum = buffer[4] ^ buffer[3] ^ buffer[2] ^ buffer[1];
+					if(checksum==buffer[5])
 					{
-						gReceiving = buffer[1];//sendData(buffer[1])
-//						if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
-//						{
-//							uint8_t response = TWO_PLAYER_REQUEST_VALUE;
-//							if(gSend2PlayerRequestFlag!=false)
-//								{
-//									sendValue(&response);
-//									gSend2PlayerRequestFlag = false;
-//								}
-//						}
+						//gReceiving = buffer[1];//sendData(buffer[1])
+						gReceiving = (buffer[4]<<24) | (buffer[3]<<16) | (buffer[2]<<8) | (buffer[1]);
 						pos = 0;
 					}
 					else
