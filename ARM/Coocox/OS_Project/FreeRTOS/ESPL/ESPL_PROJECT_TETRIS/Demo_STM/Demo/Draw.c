@@ -104,7 +104,7 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 {
 	char str[100]; // Init buffer for message
 	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans32*");
+	font1 = gdispOpenFont("UI1");
 	char blockType = 0;
 	int mX1 = 0;
 	int mY = 0;
@@ -187,34 +187,215 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	gdispClear(Black);
 
 	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans32*");
+	font1 = gdispOpenFont("DejaVuSans16");
 
-	sprintf(str, "TETRIS");
-	gdispDrawString(30, 5, str, font1, White);
+	int j = 1;
+	for(int i = 0; i <= 240-10; i = i+10)
+	{
+		color_t mColor;
+		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		{
+			case 1: mColor = Red; break;	// For each block of the piece except the pivot
+			case 2: mColor = Yellow; break;	//
+			case 3: mColor = Green; break;	//
+			case 4: mColor = Orange; break;	//
+			case 5: mColor = Blue; break;
+		}
+
+		gdispFillArea(0, 0+i, 10,10, Black);
+		gdispFillArea(2, 2+i, 8,8, mColor);
+		j++;
+		if(j>5)
+			j = 1;
+	}
+	j=2;
+	for(int i = 10; i <= 320-10; i = i+10)
+	{
+		color_t mColor;
+		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		{
+			case 1: mColor = Red; break;	// For each block of the piece except the pivot
+			case 2: mColor = Yellow; break;	//
+			case 3: mColor = Green; break;	//
+			case 4: mColor = Orange; break;	//
+			case 5: mColor = Blue; break;
+		}
+		gdispFillArea(0+i, 0, 10,10, Black);
+		gdispFillArea(2+i, 2, 8,8, mColor);
+		j++;
+		if(j>5)
+			j = 1;
+	}
+	j=3;
+	for(int i = 10; i <= 240-10; i = i+10)
+	{
+			color_t mColor;
+			switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+			{
+				case 1: mColor = Red; break;	// For each block of the piece except the pivot
+				case 2: mColor = Yellow; break;	//
+				case 3: mColor = Green; break;	//
+				case 4: mColor = Orange; break;	//
+				case 5: mColor = Blue; break;
+			}
+			gdispFillArea(319-10, 0+i, 10,10, Black);
+			gdispFillArea(319-10+2, 2+i, 8,8, mColor);
+			j++;
+			if(j>5)
+				j = 1;
+	}
+	j=5;
+	for(int i = 10; i <= 320-10; i = i+10)
+	{
+		color_t mColor;
+		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		{
+			case 1: mColor = Red; break;	// For each block of the piece except the pivot
+			case 2: mColor = Yellow; break;	//
+			case 3: mColor = Green; break;	//
+			case 4: mColor = Orange; break;	//
+			case 5: mColor = Blue; break;
+		}
+		gdispFillArea(0+i, 239-10, 10,10, Black);
+		gdispFillArea(2+i, 239-10+2, 8,8, mColor);
+		j++;
+		if(j>5)
+			j = 1;
+	}
+
+	// Draw Title
+
+	color_t titleColor = Lime;
+	//T
+	gdispFillArea(160-5-90, 20, 10,10, Black);
+	gdispFillArea(160-5+2-90, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5-90, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2-90, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5-90, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2-90, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5-90, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2-90, 20+32, 8,8, titleColor);
+
+	gdispFillArea(160-5-10-90, 20, 10,10, Black);
+	gdispFillArea(160-5+2-10-90, 20+2, 8,8, titleColor);
+
+	gdispFillArea(160-5+10-90, 20, 10,10, Black);
+	gdispFillArea(160-5+2+10-90, 20+2, 8,8, titleColor);
+
+	//E
+	gdispFillArea(160-5-60, 20, 10,10, Black);
+	gdispFillArea(160-5+2-60, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5-60, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2-60, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5-60, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2-60, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5-60, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2-60, 20+32, 8,8, titleColor);
+
+	gdispFillArea(160-5-50, 20, 10,10, Black);
+	gdispFillArea(160-5+2-50, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5-50+10, 20, 10,10, Black);
+	gdispFillArea(160-5+2-50+10, 20+2, 8,8, titleColor);
+
+	gdispFillArea(160-5-50, 20+15, 10,10, Black);
+	gdispFillArea(160-5+2-50, 20+17, 8,8, titleColor);
+
+	gdispFillArea(160-5-50, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2-50, 20+32, 8,8, titleColor);
+	gdispFillArea(160-5-50+10, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2-50+10, 20+32, 8,8, titleColor);
+
+	//T
+	gdispFillArea(160-5-10, 20, 10,10, Black);
+	gdispFillArea(160-5+2-10, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5-10, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2-10, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5-10, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2-10, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5-10, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2-10, 20+32, 8,8, titleColor);
+
+	gdispFillArea(160-5-20, 20, 10,10, Black);
+	gdispFillArea(160-5+2-20, 20+2, 8,8, titleColor);
+
+	gdispFillArea(160-5, 20, 10,10, Black);
+	gdispFillArea(160-5+2, 20+2, 8,8, titleColor);
+
+	//R
+	gdispFillArea(160-5+20, 20, 10,10, Black);
+	gdispFillArea(160-5+2+20, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5+20, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2+20, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5+20, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2+20, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5+20, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2+20, 20+32, 8,8, titleColor);
+
+	gdispFillArea(160-5+30, 20, 10,10, Black);
+	gdispFillArea(160-5+2+30, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5+30, 20+15, 10,10, Black);
+	gdispFillArea(160-5+2+30, 20+17, 8,8, titleColor);
+
+	gdispFillArea(160-5+30+10, 20+7, 10,10, Black);
+	gdispFillArea(160-5+2+30+10, 20+2+7, 8,8, titleColor);
+
+	gdispFillArea(160-5+30+10, 20+15+10, 10,10, Black);
+	gdispFillArea(160-5+2+30+10, 20+17+10, 8,8, titleColor);
+
+	// I
+	gdispFillArea(160-5+60, 20, 10,10, Black);
+	gdispFillArea(160-5+2+60, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5+60, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2+60, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5+60, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2+60, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5+60, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2+60, 20+32, 8,8, titleColor);
+
+	//S
+	gdispFillArea(160-5+90, 20, 10,10, Black);
+	gdispFillArea(160-5+2+90, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5+90, 20+10, 10,10, Black);
+	gdispFillArea(160-5+2+90, 20+2+10, 8,8, titleColor);
+	gdispFillArea(160-5+90, 20+20, 10,10, Black);
+	gdispFillArea(160-5+2+90, 20+22, 8,8, titleColor);
+	gdispFillArea(160-5+90, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2+90, 20+32, 8,8, titleColor);
+
+	gdispFillArea(160-5+100, 20, 10,10, Black);
+	gdispFillArea(160-5+2+100, 20+2, 8,8, titleColor);
+	gdispFillArea(160-5+80, 20+30, 10,10, Black);
+	gdispFillArea(160-5+2+80, 20+32, 8,8, titleColor);
 
 
 	if(*gSelectionArrowPosition==0)////if(*joystickselection==JoyStickUp)
 	{
-		sprintf(str, "->");
-		gdispDrawString(20, 30, str, font1, White);
+		gdispFillArea(115, 103, 10,10, Black);
+		gdispFillArea(115+2, 103, 8,8, titleColor);;
 	}
 	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)//(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
 	{
-		sprintf(str, "->");
-		gdispDrawString(20, 60, str, font1, White);
+		gdispFillArea(110, 143, 10,10, Black);
+		gdispFillArea(110+2, 143, 8,8, titleColor);
 	}
 
-	sprintf(str, "Player 1");
-	gdispDrawString(30, 30, str, font1, White);
+	sprintf(str, "1 Player");
+	gdispDrawString(130, 100, str, font1, White);
+
+	sprintf(str, "2 Players");
+	gdispDrawString(125, 140, str, font1, White);
 
 	if(*playerMode==twoPlayerMode)
 	{
-		sprintf(str, "Player 2");
-		gdispDrawString(30, 60, str, font1, White);
+		sprintf(str, "2 Players");
+		gdispDrawString(125, 140, str, font1, White);
 	}
 
-	sprintf(str, "Select an option and then press button B");
-	gdispDrawString(30, 120, str, font1, White);
+	gdispCloseFont(font1);
+	font1 = gdispOpenFont("UI1");
+
+	sprintf(str, "Press B to select an option");
+	gdispDrawString(30, 200, str, font1, White);
 
 }
 
@@ -224,72 +405,234 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition)//(const joystickselec
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
 
-	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans32*");
+	int j = 1;
+			for(int i = 0; i <= 240-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
 
-	sprintf(str, "GAME OVER");
-	gdispDrawString(140, 5, str, font1, White);
+				gdispFillArea(0, 0+i, 10,10, Black);
+				gdispFillArea(2, 2+i, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+			j=2;
+			for(int i = 10; i <= 320-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
+				gdispFillArea(0+i, 0, 10,10, Black);
+				gdispFillArea(2+i, 2, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+			j=3;
+			for(int i = 10; i <= 240-10; i = i+10)
+			{
+					color_t mColor;
+					switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+					{
+						case 1: mColor = Red; break;	// For each block of the piece except the pivot
+						case 2: mColor = Yellow; break;	//
+						case 3: mColor = Green; break;	//
+						case 4: mColor = Orange; break;	//
+						case 5: mColor = Blue; break;
+					}
+					gdispFillArea(319-10, 0+i, 10,10, Black);
+					gdispFillArea(319-10+2, 2+i, 8,8, mColor);
+					j++;
+					if(j>5)
+						j = 1;
+			}
+			j=5;
+			for(int i = 10; i <= 320-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
+				gdispFillArea(0+i, 239-10, 10,10, Black);
+				gdispFillArea(2+i, 239-10+2, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+
+
+		font_t font1; // Load font for ugfx
+		font1 = gdispOpenFont("DejaVuSans32");
+
+		sprintf(str, "GAME OVER");
+		gdispDrawString(70, 30, str, font1, Lime);
+
 
 
 	if(*gSelectionArrowPosition==0)//(*joystickselection==JoyStickUp)
 	{
-		sprintf(str, "->");
-		gdispDrawString(20, 30, str, font1, White);
+		gdispFillArea(115, 103, 10,10, Black);
+		gdispFillArea(115+2, 103, 8,8, Lime);
 	}
 	if(*gSelectionArrowPosition==1)//(*joystickselection==JoyStickDown)
 	{
-		sprintf(str, "->");
-		gdispDrawString(20, 60, str, font1, White);
+		gdispFillArea(105, 143, 10,10, Black);
+		gdispFillArea(105+2, 143, 8,8, Lime);
 	}
 
+	gdispCloseFont(font1);
+	font1 = gdispOpenFont("DejaVuSans16");
+
 	sprintf(str, "Restart");
-	gdispDrawString(30, 30, str, font1, White);
+	gdispDrawString(130, 100, str, font1, White);
 
 	sprintf(str, "Main menu");
-	gdispDrawString(30, 60, str, font1, White);
+	gdispDrawString(120, 140, str, font1, White);
 
-	sprintf(str, "Select an option and then press button B");
-	gdispDrawString(30, 120, str, font1, White);
+	gdispCloseFont(font1);
+	font1 = gdispOpenFont("UI1");
+
+	sprintf(str, "Press B to select an option");
+	gdispDrawString(30, 200, str, font1, White);
 }
 
 void DrawPauseMenu(uint8_t * selectionArrowPosition){
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
 
-	font_t font1; // Load font for ugfx
-	font1 = gdispOpenFont("DejaVuSans32*");
+	int j = 1;
+			for(int i = 0; i <= 240-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
 
-	sprintf(str, "PAUSE");
-	gdispDrawString(140, 5, str, font1, White);
+				gdispFillArea(0, 0+i, 10,10, Black);
+				gdispFillArea(2, 2+i, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+			j=2;
+			for(int i = 10; i <= 320-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
+				gdispFillArea(0+i, 0, 10,10, Black);
+				gdispFillArea(2+i, 2, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+			j=3;
+			for(int i = 10; i <= 240-10; i = i+10)
+			{
+					color_t mColor;
+					switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+					{
+						case 1: mColor = Red; break;	// For each block of the piece except the pivot
+						case 2: mColor = Yellow; break;	//
+						case 3: mColor = Green; break;	//
+						case 4: mColor = Orange; break;	//
+						case 5: mColor = Blue; break;
+					}
+					gdispFillArea(319-10, 0+i, 10,10, Black);
+					gdispFillArea(319-10+2, 2+i, 8,8, mColor);
+					j++;
+					if(j>5)
+						j = 1;
+			}
+			j=5;
+			for(int i = 10; i <= 320-10; i = i+10)
+			{
+				color_t mColor;
+				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				{
+					case 1: mColor = Red; break;	// For each block of the piece except the pivot
+					case 2: mColor = Yellow; break;	//
+					case 3: mColor = Green; break;	//
+					case 4: mColor = Orange; break;	//
+					case 5: mColor = Blue; break;
+				}
+				gdispFillArea(0+i, 239-10, 10,10, Black);
+				gdispFillArea(2+i, 239-10+2, 8,8, mColor);
+				j++;
+				if(j>5)
+					j = 1;
+			}
+
+		font_t font1; // Load font for ugfx
+		font1 = gdispOpenFont("DejaVuSans32");
+
+		sprintf(str, "PAUSE");
+		gdispDrawString(110, 30, str, font1, Lime);
 
 	//if(getState() == 4)
 	if(*selectionArrowPosition==0)
 	{
-		sprintf(str, "->");
-		gdispDrawString(20, 30, str, font1, White);
+		gdispFillArea(115, 103, 10,10, Black);
+		gdispFillArea(115+2, 103, 8,8, Lime);
 	}
 	else if(*selectionArrowPosition==1)//else if(getState() == 5)
 	{
-			sprintf(str, "->");
-			gdispDrawString(20, 60, str, font1, White);
+		gdispFillArea(95, 143, 10,10, Black);
+		gdispFillArea(95+2, 143, 8,8, Lime);
 	}
 	else if(*selectionArrowPosition==2)//else if(getState() == 6)
 	{
-			sprintf(str, "->");
-			gdispDrawString(20, 90, str, font1, White);
+		gdispFillArea(108, 183, 10,10, Black);
+		gdispFillArea(108+2, 183, 8,8, Lime);
 	}
 
+	gdispCloseFont(font1);
+	font1 = gdispOpenFont("DejaVuSans16");
+
 	sprintf(str, "Resume");
-	gdispDrawString(30, 30, str, font1, White);
+	gdispDrawString(130, 100, str, font1, White);
 
 	sprintf(str, "Restart game");
-	gdispDrawString(30, 60, str, font1, White);
+	gdispDrawString(110, 140, str, font1, White);
 
 	sprintf(str, "Exit game");
-	gdispDrawString(30, 90, str, font1, White);
+	gdispDrawString(123, 180, str, font1, White);
 
-	sprintf(str, "Select an option and then press button B");
-	gdispDrawString(30, 150, str, font1, White);
+	gdispCloseFont(font1);
+	font1 = gdispOpenFont("UI1");
+
+	sprintf(str, "Press B to select an option");
+	gdispDrawString(30, 210, str, font1, White);
 }
 
 color_t GetColor(char color)

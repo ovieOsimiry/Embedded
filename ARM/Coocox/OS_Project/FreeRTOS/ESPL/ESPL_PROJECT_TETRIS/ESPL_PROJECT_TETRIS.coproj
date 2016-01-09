@@ -78,7 +78,7 @@
       <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
-      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\Edu\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F4xx_2048K\STM32F4xx_2048.elf"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\Natalia\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F4xx_2048K\STM32F4xx_2048.elf"/>
     </DebugOption>
     <ExcludeFile/>
   </Target>
@@ -89,14 +89,14 @@
   <Files>
     <File name="include/tm_stm32f4_rng.c" path="Demo_STM/include/tm_stm32f4_rng.c" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/queue.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/queue.c" type="1"/>
-    <File name="Libraries/ugfxr21/src/mf_font.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/mcufont/mf_font.c" type="1"/>
     <File name="Libraries/ugfxr21/src/gevent.c" path="Demo_STM/Libraries/ugfxr21/src/gevent/gevent.c" type="1"/>
+    <File name="Libraries/ugfxr21/src/mf_font.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/mcufont/mf_font.c" type="1"/>
     <File name="Libraries/ugfxr21/src/mouse.c" path="Demo_STM/Libraries/ugfxr21/src/ginput/mouse.c" type="1"/>
     <File name="Libraries/ugfxr21/src/mf_scaledfont.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/mcufont/mf_scaledfont.c" type="1"/>
     <File name="Libraries/ugfxr21/src/gtimer.c" path="Demo_STM/Libraries/ugfxr21/src/gtimer/gtimer.c" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Demo" path="" type="2"/>
-    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities" path="" type="2"/>
     <File name="Libraries/ugfxr21/src/ginput.c" path="Demo_STM/Libraries/ugfxr21/src/ginput/ginput.c" type="1"/>
+    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities" path="" type="2"/>
     <File name="Libraries/ugfxr21/src/gfx.c" path="Demo_STM/Libraries/ugfxr21/src/gfx.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries" path="" type="2"/>
     <File name="Libraries/ugfxr21/src/gdisp.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/gdisp.c" type="1"/>
@@ -106,9 +106,9 @@
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c" type="1"/>
     <File name="Libraries" path="" type="2"/>
+    <File name="Libraries/usr/ParTest.c" path="Demo_STM/Libraries/usr/ParTest.c" type="1"/>
     <File name="include/FreeRTOSConfig.h" path="Demo_STM/include/FreeRTOSConfig.h" type="1"/>
     <File name="Demo/Draw.c" path="Demo_STM/Demo/Draw.c" type="1"/>
-    <File name="Libraries/usr/ParTest.c" path="Demo_STM/Libraries/usr/ParTest.c" type="1"/>
     <File name="include/includes.h" path="Demo_STM/include/includes.h" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/tasks.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/tasks.c" type="1"/>
     <File name="Libraries/ugfxr21/src/mf_rlefont.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/mcufont/mf_rlefont.c" type="1"/>
@@ -128,9 +128,9 @@
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dma2d.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_dma2d.c" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/list.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/list.c" type="1"/>
-    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.c" type="1"/>
-    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver" path="" type="2"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/ch.h" path="ch.h" type="1"/>
+    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver" path="" type="2"/>
+    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_lcd.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_gpio.c" type="1"/>
     <File name="Libraries/usr/port.c" path="Demo_STM/Libraries/usr/port.c" type="1"/>
     <File name="Libraries/ugfxr21/src/fonts.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/fonts.c" type="1"/>
@@ -139,15 +139,15 @@
     <File name="include/defines.h" path="Demo_STM/include/defines.h" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_ltdc.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_ltdc.c" type="1"/>
     <File name="components/C_library" path="" type="2"/>
-    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/portable/MemMang" path="" type="2"/>
+    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c" type="1"/>
     <File name="components/C_library/syscalls.c" path="components/coocox-master/C_library/source/syscalls.c" type="1"/>
     <File name="include/gfxconf.h" path="Demo_STM/include/gfxconf.h" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.c" type="1"/>
     <File name="Demo/Demo.h" path="Demo_STM/Demo/Demo.h" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Demo/Common/Minimal" path="" type="2"/>
-    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1" path="" type="2"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS" path="" type="2"/>
+    <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1" path="" type="2"/>
     <File name="Libraries/usr/ESPL_functions.c" path="Demo_STM/Libraries/usr/ESPL_functions.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/misc.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/misc.c" type="1"/>
     <File name="include" path="" type="2"/>
@@ -159,8 +159,8 @@
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities/STM32F429I-Discovery" path="" type="2"/>
     <File name="Demo/Demo.c" path="Demo_STM/Demo/Demo.c" type="1"/>
     <File name="Libraries/ugfxr21/src/gwin.c" path="Demo_STM/Libraries/ugfxr21/src/gwin/gwin.c" type="1"/>
-    <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/timers.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/timers.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_exti.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_exti.c" type="1"/>
+    <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/timers.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/timers.c" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Demo/Common" path="" type="2"/>
     <File name="Libraries/usr/ginput_lld_mouse.c" path="Demo_STM/Libraries/usr/ginput_lld_mouse.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_ioe.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Utilities/STM32F429I-Discovery/stm32f429i_discovery_ioe.c" type="1"/>
@@ -170,8 +170,8 @@
     <File name="Libraries/ugfxr21/src/gwm.c" path="Demo_STM/Libraries/ugfxr21/src/gwin/gwm.c" type="1"/>
     <File name="Libraries/ugfxr21/src/console.c" path="Demo_STM/Libraries/ugfxr21/src/gwin/console.c" type="1"/>
     <File name="Libraries/ugfxr21/src" path="" type="2"/>
-    <File name="include/tm_stm32f4_rng.h" path="Demo_STM/include/tm_stm32f4_rng.h" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/portable/MemMang/heap_1.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/portable/MemMang/heap_1.c" type="1"/>
+    <File name="include/tm_stm32f4_rng.h" path="Demo_STM/include/tm_stm32f4_rng.h" type="1"/>
     <File name="Libraries/ugfxr21/src/freertos.c" path="Demo_STM/Libraries/ugfxr21/src/gos/freertos.c" type="1"/>
   </Files>
   <Bookmarks/>
