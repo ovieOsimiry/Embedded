@@ -123,7 +123,12 @@ int main() {
 }
 
 
-
+/* -------------------------------------------
+ *@desc Assign the next shape to the current one, creates
+ *@desc a new shape and stores it in gNextShape
+ *@param void parameters
+ *@return void parameters
+ * ------------------------------------------- */
 void CreateNewShape()
 {
 	// The new shape
@@ -138,8 +143,6 @@ void CreateNewShape()
 	}
 	gNextShape = GetShape(randNum);//compute next shape.
 }
-
-
 
 static void SystemState()
 {
@@ -364,10 +367,8 @@ static void SystemState()
 	}
 }
 
-
 static void GamePlay()
 {
-
 		shape_t * ptrShape = &gCurrentShape;
 		shape_t shapeTemp;// used for temporary calculations
 		//const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
@@ -519,10 +520,13 @@ static void GamePlay()
 		}
 }
 
-
-/**
- * Task which draws to the display.
- */
+/* -------------------------------------------
+ *@desc Draws the screen depending on the position of the shapes,
+ *@desc state of the game and use of the buttons and joystick;
+ *@desc making use of the functions in the Draw.c file
+ *@param void parameters
+ *@return void parameters
+ * ------------------------------------------- */
 static void drawTask() {
 
 //	char str[100]; // Init buffer for message
@@ -572,6 +576,12 @@ static void drawTask() {
 	}
 }
 
+/* -------------------------------------------
+ *@desc Resets the global variables of the game to zero and
+ *@desc initializes the functions for a new game
+ *@param void parameters
+ *@return void parameters
+ * ------------------------------------------- */
 void ResetGamePlay()
 {
 	gGameScore = 0;
@@ -582,6 +592,13 @@ void ResetGamePlay()
 	CreateNewShape();
 }
 
+/* -------------------------------------------
+ *@desc Calculates the score of the game according to
+ *@desc the lines made and the level of the game.
+ *@param level - currently level of the game
+ *@param lines - lines made
+ *@return int - Score reached with those lines and level.
+ * ------------------------------------------- */
 int calculateScore(int level, int lines)
 {
 
@@ -596,12 +613,13 @@ int calculateScore(int level, int lines)
 			return 300*(level+1);
 		case 4:
 			return 1200*(level+1);
-		default: //more than 4 lines
-			return 1200*(level+1)+(lines-4)*40*(level+1);
+		default:
+			return 0;
 
 	}
 }
 /*External interrupt handler for Button E*/
+
 
 void EXTI0_IRQHandler(void)//Button E interrupt handler
 {
@@ -641,7 +659,7 @@ void EXTI2_IRQHandler(void)//Button D interrupt handler
 }
 
 /*External interrupt handler for Button B*/
-void EXTI4_IRQHandler(void)
+void EXTI4_IRQHandler(void)//Button B interrupt handler
 {
 
 	timerStart();
@@ -660,9 +678,8 @@ void EXTI4_IRQHandler(void)
 	EXTI_ClearITPendingBit(EXTI_Line4);
 }
 
-
 /*External interrupt handler for Button A and Button C*/
-void EXTI9_5_IRQHandler(void)
+void EXTI9_5_IRQHandler(void)//Buttons C and A interrupt handler
 {
 	timerStart(); //Reset the debouncing timer
 

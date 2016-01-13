@@ -30,8 +30,7 @@ static int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 //int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
 
 /*-------------------------------------------------------------------------------------------------------
- * This function clears the board Matrix by initializing all elements to 0
- *
+ * @desc This function clears the board Matrix by initializing all elements to 0
  * -----------------------------------------------------------------------------------------------------*/
 void InitializeBoardMatrix()
 {
@@ -39,7 +38,7 @@ void InitializeBoardMatrix()
 		for (int j = 0; j < BOARD_HEIGHT_IN_BLOCKS; j++)
 			BoardMatrix[i][j] = 0;
 }
-/*-------------------------------------------------------------------------------------------------------*/
+
 
 
 void DrawShapeWithHandle(shape_t * ptrShape)
@@ -68,13 +67,25 @@ void DrawShapeWithHandle(shape_t * ptrShape)
 	}
 }
 
+/* -------------------------------------------
+ *@desc Draws a custom block on the screen according to the
+ *@desc parameters given
+ *@param x,y - coordinates of the block
+ *@param cx, cy - size of the block
+ *@param color - color of the block
+ *@return void function
+ * ------------------------------------------- */
 void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color)
 {
 	gdispFillArea(x,y,cx,cy,Black);//border of block
 	gdispFillArea(x+2,y+2,cx-2,cy-2,color);//block
 }
 
-//Draws next block to be playable into the <next> box
+/* -------------------------------------------
+ *@desc Draws the shape to be playable into the next box
+ *@param ptrShape - next shape
+ *@return void function
+ * ------------------------------------------- */
 void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
 {
 	color_t mColor;				// Color of the block
@@ -100,6 +111,18 @@ void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
 	}
 }
 
+///NOT FINISHED
+/* -------------------------------------------
+ *@desc Draws the game screen depending on the state of the game (1 or 2 player mode)
+ *@param ptrShape - next Shape
+ *@param lines - lines made
+ *@param score - actual score
+ *@param level - current level
+ *@param sth
+ *@param sth
+ *@param state - state of the game ( 1 or 2 player mode)
+ *@return void function
+ * ------------------------------------------- */
 void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int receiving, int sending, systemState_t state)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
@@ -108,10 +131,6 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 	char blockType = 0;
 	int mX1 = 0;
 	int mY = 0;
-
-//	gdispFillArea(BOARD_OFFSET_X_AXIS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//left boarder
-//	gdispFillArea(BOARD_OFFSET_X_AXIS + BOARD_WIDTH + BOARDER_THICKNESS,mY,BOARDER_THICKNESS,SCREEN_HEIGHT-BOARDER_THICKNESS,Blue);//right boarder
-//	gdispFillArea(BOARD_OFFSET_X_AXIS,230,(BOARDER_THICKNESS+BOARD_WIDTH+BOARDER_THICKNESS),BOARDER_THICKNESS,Blue);//bottom boarder
 
 	gdispFillArea(BOARD_OFFSET_X_AXIS,mY,BOARD_WIDTH+(2*BOARDER_THICKNESS),SCREEN_HEIGHT,Blue);//left boarder
 	gdispFillArea(BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,mY,BOARD_WIDTH,SCREEN_HEIGHT-BOARDER_THICKNESS,Black);//left boarder
@@ -126,9 +145,7 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 			// Check if the block is filled, if so, draw it
 			blockType = GetPeiceType(i, j);
 			if (blockType!=0)
-				//gdispFillArea(((mX1+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS,((mY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,GetColor(blockType));
 				DrawCustomBlock(((i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,(j * BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,GetColor(blockType));
-
 		}
 	}
 
@@ -170,10 +187,9 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 	    // Print string
 	    gdispDrawString(170+30+adjustment, 0+170-5, str, font1, White);
 
-	    //DrawNextShape(nextShape,nextRotation);
 	    DrawNextShape(ptrShape);
 	}
-	else {
+	else { // 2 player mode
 		adjustment = 10;
 		gdispFillArea(170+30-5+adjustment, 0+20-10 , 100+10,30+10, Blue);
 		gdispFillArea(170+30-5+adjustment, 0+70-10 , 100+10,30+10, Blue);
@@ -210,7 +226,6 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 		// Print string
 		gdispDrawString(170+30+adjustment, 0+170-5, str, font1, White);
 
-		//DrawNextShape(nextShape,nextRotation);
 		DrawNextShape(ptrShape);
 
 		sprintf(str, "Rounds won");
@@ -234,6 +249,13 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 	}
 }
 
+/* -------------------------------------------
+ *@desc Draws the main menu screen
+ *@param gSelectionArrowPosition - Possible selection according to the joystick
+ *@param playerMode - 1 or 2 player mode
+ *@param gHighestScore - highest score of the game
+ *@return void function
+ * ------------------------------------------- */
 void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore )//(const joystickselection_t * joystickselection, const playermode_t * playerMode )
 {
 	char str[100]; // Init buffer for message
@@ -424,7 +446,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	if(*gSelectionArrowPosition==0)////if(*joystickselection==JoyStickUp)
 	{
 		gdispFillArea(115, 103, 10,10, Black);
-		gdispFillArea(115+2, 103, 8,8, titleColor);;
+		gdispFillArea(115+2, 103, 8,8, titleColor);
 	}
 	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)//(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
 	{
@@ -458,7 +480,11 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 
 }
 
-
+/* -------------------------------------------
+ *@desc Draws the game over screen
+ *@param gSelectionArrowPosition - Possible selection according to the joystick
+ *@return void function
+ * ------------------------------------------- */
 void DrawGameOver(const uint8_t * gSelectionArrowPosition)//(const joystickselection_t * joystickselection  )
 {
 	char str[100]; // Init buffer for message
@@ -574,6 +600,11 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition)//(const joystickselec
 	gdispDrawString(30, 200, str, font1, White);
 }
 
+/* -------------------------------------------
+ *@desc Draws the pause screen
+ *@param gSelectionArrowPosition - Possible selection according to the joystick
+ *@return void function
+ * ------------------------------------------- */
 void DrawPauseMenu(uint8_t * selectionArrowPosition){
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -694,6 +725,11 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 	gdispDrawString(30, 210, str, font1, White);
 }
 
+/* -------------------------------------------
+ *@desc Get color depending on the given number
+ *@param color - number of the color
+ *@return color type (default White)
+ * ------------------------------------------- */
 color_t GetColor(char color)
 {
 	switch(color)
@@ -721,7 +757,11 @@ color_t GetColor(char color)
 	}
 }
 
-
+/* -------------------------------------------
+ *@desc Checks the state of a piece of the matrix
+ *@param pX, pY - Coordinate of the piece
+ *@return char - state of the piece in the matrix
+ * ------------------------------------------- */
 char GetPeiceType(int pX, int pY)
 {
 	return BoardMatrix [pX][pY];
@@ -762,7 +802,6 @@ boolean_t IsMoveMentPossible (shape_t * ptrShape)
 	return true;
 }
 
-
 void StoreShape (shape_t * ptrShape)
 {
 
@@ -779,7 +818,11 @@ void StoreShape (shape_t * ptrShape)
 	}
 }
 
-
+/* -------------------------------------------
+ *@desc Deletes a line of blocks in the matrix
+ *@param pY - line coordinate to delete
+ *@return void function
+ * ------------------------------------------- */
 void DeleteLine (int pY)
 {
 	// Moves all the upper lines one row down
@@ -802,7 +845,6 @@ int CheckForUnRemovableLine()
 		}
 	return (BOARD_HEIGHT_IN_BLOCKS-1);
 }
-
 
 void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate)
 {
@@ -832,7 +874,6 @@ void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordina
 		}
 }
 
-
 int GetYCoordForButtomOfShape(shape_t * ptrShape)
 {
 	int aPeiceOfShape = 0;
@@ -849,7 +890,6 @@ int GetYCoordForButtomOfShape(shape_t * ptrShape)
 	}
 	return 0;
 }
-
 
 void GetXCoordsForBothSidesOfShape(shape_t * ptrShape, coord_t * xRight, coord_t * xLeft)
 {
@@ -964,7 +1004,11 @@ void AddLine(int NumOfLines, shape_t * ptrShape)
 	/*--------------------------------------------------------------------------------------------*/
 }
 
-
+/* -------------------------------------------
+ *@desc Checks and deletes the lines that are already filled with blocks
+ *@param void parameters
+ *@return int - number of deleted lines
+ * ------------------------------------------- */
 int DeletePossibleLines ()
 {
 	char blockType = 0;
@@ -987,9 +1031,14 @@ int DeletePossibleLines ()
 	return numOfLinesFilled;
 }
 
+/* -------------------------------------------
+ *@desc Checks the middle top of the matrix to see if there's blocks.
+ *@param void parameters
+ *@return boolean - true if the middle top of the matris is full.
+ * ------------------------------------------- */
 boolean_t isGameOver()
 {
-	if(BoardMatrix[4][0]!=0 || BoardMatrix[5][0]!=0 || BoardMatrix[6][0]!=0)
+	if(BoardMatrix[4][0]!=0 || BoardMatrix[5][0]!=0 || BoardMatrix[6][0]!=0) // top - middle of the board
 		return true;
 	return false;
 }
