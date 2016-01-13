@@ -60,6 +60,7 @@ int gGameScore = 0;
 int gDifficultyLevel;
 int gReceiving = 0;
 int gSending = 0;
+int gHighestScore = 0;
 uint8_t gSelectionArrowPosition = 0;
 shape_t gCurrentShape;
 shape_t gNextShape;
@@ -457,6 +458,10 @@ static void GamePlay()
 						tempNoOfLines = DeletePossibleLines();
 						gTotalNumberOfLinesCompleted += tempNoOfLines;
 						gGameScore+=calculateScore(gDifficultyLevel,tempNoOfLines);
+						if(gGameScore>gHighestScore)
+						{
+							gHighestScore = gGameScore;
+						}
 						gShapeDownMovementSpeedGaurd=false;
 						if(tempNoOfLines>=1 && getState()==stateGame2Player)
 							{
@@ -542,12 +547,12 @@ static void drawTask() {
 
 		if(getState()==stateMainMenu)
 		{
-			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode);
+			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode, &gHighestScore);
 		}
 		else if(getState()==stateGame1Player || getState()==stateGame2Player) {
 			//DrawShapeWithHandle(&gCurrentShape);
 			//DrawGameFrame(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
-			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
+			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending,getState());
 			DrawShapeWithHandle(&gCurrentShape);
 		}
 		else if(getState()== stateGamePaused){// || getState() == 5 || getState() == 6){

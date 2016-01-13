@@ -3,6 +3,7 @@
 
 #include "includes.h"
 #include "Shape.h"
+#include "Election.h"
 
 /*-------------------PLEASE DO NOT EDIT!!!----------------*/
 #define BOARD_POSITION 50
@@ -20,9 +21,9 @@
 #define BOARDER_THICKNESS 5//11
 /*---------------------------------------------------------------*/
 void DrawPauseMenu();
-void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode );//(const joystickselection_t * joystickselection , const playermode_t * playerMode );
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore );//(const joystickselection_t * joystickselection , const playermode_t * playerMode );
 void DrawShapeWithHandle(shape_t * ptrShape);
-void DrawGameFrame(shape_t * ptrShape, int lines,int score,int level, int receiving, int sending);//(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
+void DrawGameFrame(shape_t * ptrShape, int lines,int score,int level, int receiving, int sending, systemState_t state);//(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
 void DrawGameOver(const uint8_t * gSelectionArrowPosition);//(const joystickselection_t * joystickselection );
 
 void AddLine(int NumOfLines, shape_t * ptrShape);

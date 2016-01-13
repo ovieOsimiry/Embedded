@@ -100,7 +100,7 @@ void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
 	}
 }
 
-void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int receiving, int sending)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
+void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int receiving, int sending, systemState_t state)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
 	font_t font1; // Load font for ugfx
@@ -132,56 +132,109 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 		}
 	}
 
-    gdispFillArea(170+30-5, 0+20-10 , 100+10,30+10, Blue);
-    gdispFillArea(170+30-5, 0+70-10 , 100+10,30+10, Blue);
-    gdispFillArea(170+30-5, 0+120-10 , 100+10,30+10, Blue);
-    gdispFillArea(170+30-5, 0+170-10 , 100+10,60+10, Blue);
+	int adjustment = 0;
+	if(state = stateGame1Player)
+	{
+	    gdispFillArea(170+30-5+adjustment, 0+20-10 , 100+10,30+10, Blue);
+	    gdispFillArea(170+30-5+adjustment, 0+70-10 , 100+10,30+10, Blue);
+	    gdispFillArea(170+30-5+adjustment, 0+120-10 , 100+10,30+10, Blue);
+	    gdispFillArea(170+30-5+adjustment, 0+170-10 , 100+10,60+10, Blue);
 
-    gdispFillArea(170+30, 0+20-5 , 100,30, Black);
-    gdispFillArea(170+30, 0+70-5 , 100,30, Black);
-    gdispFillArea(170+30, 0+120-5 , 100,30, Black);
-    gdispFillArea(170+30, 0+170-5 , 100,60, Black);
+	    gdispFillArea(170+30+adjustment, 0+20-5 , 100,30, Black);
+	    gdispFillArea(170+30+adjustment, 0+70-5 , 100,30, Black);
+	    gdispFillArea(170+30+adjustment, 0+120-5 , 100,30, Black);
+	    gdispFillArea(170+30+adjustment, 0+170-5 , 100,60, Black);
 
-    sprintf(str, "Score");
-    // Print string
-    gdispDrawString(170+30, 0+20-5, str, font1, White);
+	    sprintf(str, "Score");
+	    // Print string
+	    gdispDrawString(170+30+adjustment, 0+20-5, str, font1, White);
 
-    sprintf(str, "%d",score);
-    gdispDrawString(170+80, 0+30, str, font1, White);
+	    sprintf(str, "%d",score);
+	    gdispDrawString(170+80+adjustment, 0+30, str, font1, White);
 
-    sprintf(str, "Level");
-    // Print string
-    gdispDrawString(170+30, 0+70-5, str, font1, White);
+	    sprintf(str, "Level");
+	    // Print string
+	    gdispDrawString(170+30+adjustment, 0+70-5, str, font1, White);
 
-	sprintf(str, "%d",level);
-    gdispDrawString(170+80, 0+80, str, font1, White);
+		sprintf(str, "%d",level);
+	    gdispDrawString(170+80+adjustment, 0+80, str, font1, White);
 
-    sprintf(str, "Lines");
-    // Print string
-    gdispDrawString(170+30, 0+120-5, str, font1, White);
+	    sprintf(str, "Lines");
+	    // Print string
+	    gdispDrawString(170+30+adjustment, 0+120-5, str, font1, White);
 
-    sprintf(str, "%d",lines);
-    gdispDrawString(170+80, 0+130, str, font1, White);
+	    sprintf(str, "%d",lines);
+	    gdispDrawString(170+80+adjustment, 0+130, str, font1, White);
 
-    sprintf(str, "Next");
-    // Print string
-    gdispDrawString(170+30, 0+170-5, str, font1, White);
+	    sprintf(str, "Next");
+	    // Print string
+	    gdispDrawString(170+30+adjustment, 0+170-5, str, font1, White);
 
-    //DrawNextShape(nextShape,nextRotation);
-    DrawNextShape(ptrShape);
+	    //DrawNextShape(nextShape,nextRotation);
+	    DrawNextShape(ptrShape);
+	}
+	else {
+		adjustment = 10;
+		gdispFillArea(170+30-5+adjustment, 0+20-10 , 100+10,30+10, Blue);
+		gdispFillArea(170+30-5+adjustment, 0+70-10 , 100+10,30+10, Blue);
+		gdispFillArea(170+30-5+adjustment, 0+120-10 , 100+10,30+10, Blue);
+		gdispFillArea(170+30-5+adjustment, 0+170-10 , 100+10,60+10, Blue);
 
-    sprintf(str, "Receiving");
-    gdispDrawString(140, 0+20-5, str, font1, White);
-    sprintf(str, "%d",receiving);
-    gdispDrawString(140, 0+30, str, font1, White);
+		gdispFillArea(170+30+adjustment, 0+20-5 , 100,30, Black);
+		gdispFillArea(170+30+adjustment, 0+70-5 , 100,30, Black);
+		gdispFillArea(170+30+adjustment, 0+120-5 , 100,30, Black);
+		gdispFillArea(170+30+adjustment, 0+170-5 , 100,60, Black);
 
-    sprintf(str, "Sending");
-    gdispDrawString(140, 0+70-5, str, font1, White);
-	sprintf(str, "%d",sending);
-    gdispDrawString(140, 0+80, str, font1, White);
+		sprintf(str, "Score");
+		// Print string
+		gdispDrawString(170+30+adjustment, 0+20-5, str, font1, White);
+
+		sprintf(str, "%d",score);
+		gdispDrawString(170+80+adjustment, 0+30, str, font1, White);
+
+		sprintf(str, "Level");
+		// Print string
+		gdispDrawString(170+30+adjustment, 0+70-5, str, font1, White);
+
+		sprintf(str, "%d",level);
+		gdispDrawString(170+80+adjustment, 0+80, str, font1, White);
+
+		sprintf(str, "Lines");
+		// Print string
+		gdispDrawString(170+30+adjustment, 0+120-5, str, font1, White);
+
+		sprintf(str, "%d",lines);
+		gdispDrawString(170+80+adjustment, 0+130, str, font1, White);
+
+		sprintf(str, "Next");
+		// Print string
+		gdispDrawString(170+30+adjustment, 0+170-5, str, font1, White);
+
+		//DrawNextShape(nextShape,nextRotation);
+		DrawNextShape(ptrShape);
+
+		sprintf(str, "Rounds won");
+		gdispDrawString(133, 0+20-5, str, font1, White);
+		sprintf(str, "%d",receiving);
+		gdispDrawString(133, 0+30, str, font1, White);
+
+		sprintf(str, "Total");
+		gdispDrawString(133, 0+70-5, str, font1, White);
+		sprintf(str, "rounds");
+		gdispDrawString(133, 0+85-5, str, font1, White);
+		sprintf(str, "%d",receiving);
+		gdispDrawString(133, 0+95, str, font1, White);
+
+		sprintf(str, "Opponent");
+		gdispDrawString(133, 0+135-5, str, font1, White);
+		sprintf(str, "lines");
+		gdispDrawString(133, 0+150-5, str, font1, White);
+		sprintf(str, "%d",sending);
+		gdispDrawString(133, 0+160, str, font1, White);
+	}
 }
 
-void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode )//(const joystickselection_t * joystickselection, const playermode_t * playerMode )
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore )//(const joystickselection_t * joystickselection, const playermode_t * playerMode )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -396,6 +449,12 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 
 	sprintf(str, "Press B to select an option");
 	gdispDrawString(30, 200, str, font1, White);
+
+	sprintf(str, "Highest score:");
+	gdispDrawString(30, 215, str, font1, White);
+
+    sprintf(str, "%d", *gHighestScore);
+    gdispDrawString(120, 215, str, font1, White);
 
 }
 
