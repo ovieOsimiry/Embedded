@@ -440,12 +440,16 @@ static void GamePlay()
 								setState(stateGameOver);
 								g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 								g2playerGameNoOfRounds = 0;
+								gPlayer1NumOfLinesCompleted = 0;
+								gPlayer2NumOfLinesCompleted = 0;
 								gReceiving = 0;
 							}else
 							{
 								//setState(stateYouWonARound2PlayerGame);
 								ResetGamePlay();
 								tempNoOfLines = 0;//reset temporary local variables within the task.
+								gPlayer1NumOfLinesCompleted = 0;
+								gPlayer2NumOfLinesCompleted = 0;
 								gReceiving = 0;//reset variable for next time
 							}
 						break;
@@ -476,9 +480,9 @@ static void GamePlay()
 
 							//We check our line count first because it got updated in the last cycle so we need to check it if we already reached 30 lines
 							//if our line count has reached 30 lines then it means we have won a round p.
-							if(gPlayer1NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
+							if(gPlayer1NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
 							{
-								if(gPlayer2NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)//we check if player 2 has also reached 30 lines and if so a tie has occurred.
+								if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)//we check if player 2 has also reached 30 lines and if so a tie has occurred.
 								{
 									//setState(stateATieOccurred2PlayerGame);
 									ResetGamePlay();
@@ -508,17 +512,18 @@ static void GamePlay()
 									}
 								}
 							}
-							else if(gPlayer2NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
+							else if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
 							{
 								//setState(stateYouLostARound2PlayerGame);
-								++g2playerGameNoOfRoundsWon;
 								++g2playerGameNoOfRounds;
-								if(g2playerGameNoOfRoundsWon == 4)
+								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon) == 4)
 								{
 									//setState(stateYouWon2playerGame);
 									setState(stateGameOver);
 									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 									g2playerGameNoOfRounds = 0;
+									gPlayer1NumOfLinesCompleted = 0;
+									gPlayer2NumOfLinesCompleted = 0;
 								}
 								else
 								{
@@ -583,9 +588,32 @@ static void GamePlay()
 						 {
 							//##not yet complete please take note.
 							if(getState()==stateGame2Player){
-								sendValue(TWO_PLAYER_MODE_GAME_OVER);//takes care of when you lost a round due to full screen in 2 player mode.
+								sendValue(TWO_PLAYER_MODE_GAME_OVER);//Notify the other player you lost. takes care of when you lost a round due to full screen in 2 player mode.
+								ResetGamePlay();
+								tempNoOfLines = 0;//reset temporary local variables within the task.
+								++g2playerGameNoOfRounds;
+								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon)  == 4)
+								{
+									//setState(stateYouWon2playerGame);
+									setState(stateGameOver);
+									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
+									g2playerGameNoOfRounds = 0;
+									gPlayer1NumOfLinesCompleted = 0;
+									gPlayer2NumOfLinesCompleted = 0;
+								}
+								else
+								{
+									//setState(stateYouWonARound2PlayerGame);
+									ResetGamePlay();
+									tempNoOfLines = 0;//reset temporary local variables within the task.
+									gPlayer1NumOfLinesCompleted = 0;
+									gPlayer2NumOfLinesCompleted = 0;
+								}
 							}
-							setState(stateGameOver);
+							else
+							{
+								setState(stateGameOver);
+							}
 						 }
 					}
 				}
