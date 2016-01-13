@@ -23,7 +23,8 @@
 void DrawPauseMenu();
 void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore );//(const joystickselection_t * joystickselection , const playermode_t * playerMode );
 void DrawShapeWithHandle(shape_t * ptrShape);
-void DrawGameFrame(shape_t * ptrShape, int lines,int score,int level, int receiving, int sending, systemState_t state);//(int nextShape,int nextRotation,int lines,int score,int level, int receiving, int sending);
+void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2playerGameNoOfRoundsWon,
+		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state);
 void DrawGameOver(const uint8_t * gSelectionArrowPosition);//(const joystickselection_t * joystickselection );
 
 void AddLine(int NumOfLines, shape_t * ptrShape);

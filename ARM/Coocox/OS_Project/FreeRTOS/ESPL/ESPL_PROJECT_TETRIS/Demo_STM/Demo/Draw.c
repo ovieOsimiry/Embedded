@@ -123,7 +123,8 @@ void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
  *@param state - state of the game ( 1 or 2 player mode)
  *@return void function
  * ------------------------------------------- */
-void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int receiving, int sending, systemState_t state)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
+void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2playerGameNoOfRoundsWon,
+		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
 {
 	char str[100]; // Init buffer for message
 	font_t font1; // Load font for ugfx
@@ -230,21 +231,21 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 
 		sprintf(str, "Rounds won");
 		gdispDrawString(133, 0+20-5, str, font1, White);
-		sprintf(str, "%d",receiving);
+		sprintf(str, "%d",g2playerGameNoOfRoundsWon);
 		gdispDrawString(133, 0+30, str, font1, White);
 
 		sprintf(str, "Total");
 		gdispDrawString(133, 0+70-5, str, font1, White);
 		sprintf(str, "rounds");
 		gdispDrawString(133, 0+85-5, str, font1, White);
-		sprintf(str, "%d",receiving);
+		sprintf(str, "%d",g2playerGameNoOfRounds);
 		gdispDrawString(133, 0+95, str, font1, White);
 
 		sprintf(str, "Opponent");
 		gdispDrawString(133, 0+135-5, str, font1, White);
 		sprintf(str, "lines");
 		gdispDrawString(133, 0+150-5, str, font1, White);
-		sprintf(str, "%d",sending);
+		sprintf(str, "%d",gPlayer2NumOfLinesCompleted);
 		gdispDrawString(133, 0+160, str, font1, White);
 	}
 }

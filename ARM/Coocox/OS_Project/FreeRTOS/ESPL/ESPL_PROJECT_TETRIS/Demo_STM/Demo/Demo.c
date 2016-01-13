@@ -648,7 +648,8 @@ static void drawTask() {
 		else if(getState()==stateGame1Player || getState()==stateGame2Player) {
 			//DrawShapeWithHandle(&gCurrentShape);
 			//DrawGameFrame(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
-			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending,getState());
+			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,g2playerGameNoOfRoundsWon,
+					g2playerGameNoOfRounds, gPlayer2NumOfLinesCompleted,getState());
 			DrawShapeWithHandle(&gCurrentShape);
 		}
 		else if(getState()== stateGamePaused){// || getState() == 5 || getState() == 6){

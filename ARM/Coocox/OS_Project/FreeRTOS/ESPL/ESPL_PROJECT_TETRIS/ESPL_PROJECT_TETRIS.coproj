@@ -78,7 +78,7 @@
       <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
-      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\MEC9\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F4xx_2048K\STM32F4xx_2048.elf"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\Natalia\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F4xx_2048K\STM32F4xx_2048.elf"/>
     </DebugOption>
     <ExcludeFile/>
   </Target>
@@ -106,9 +106,9 @@
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c" type="1"/>
     <File name="Libraries/STM32F429I-Discovery_FW_V1_0_1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c" path="Demo_STM/Libraries/STM32F429I-Discovery_FW_V1.0.1/Libraries/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_spi.c" type="1"/>
     <File name="Libraries" path="" type="2"/>
-    <File name="Demo/Draw.c" path="Demo_STM/Demo/Draw.c" type="1"/>
     <File name="Libraries/usr/ParTest.c" path="Demo_STM/Libraries/usr/ParTest.c" type="1"/>
     <File name="include/FreeRTOSConfig.h" path="Demo_STM/include/FreeRTOSConfig.h" type="1"/>
+    <File name="Demo/Draw.c" path="Demo_STM/Demo/Draw.c" type="1"/>
     <File name="include/includes.h" path="Demo_STM/include/includes.h" type="1"/>
     <File name="Libraries/FreeRTOSV8_2_3/FreeRTOS/Source/tasks.c" path="Demo_STM/Libraries/FreeRTOSV8.2.3/FreeRTOS/Source/tasks.c" type="1"/>
     <File name="Libraries/ugfxr21/src/mf_rlefont.c" path="Demo_STM/Libraries/ugfxr21/src/gdisp/mcufont/mf_rlefont.c" type="1"/>
