@@ -7,13 +7,14 @@ typedef enum
 	stateMainMenu,
 	stateGamePaused,
 	state2ndPlayerPausedGame,
-	stateYouWonARound,
-	stateYouLostARound,
+	stateYouWonARound2PlayerGame,
+	stateYouLostARound2PlayerGame,
 	stateGameOver,
 	stateGame1Player,
 	stateGame2Player,
 	stateYouWon2playerGame,
-	stateYouLost2PlayerGame
+	stateYouLost2PlayerGame,
+	stateATieOccurred2PlayerGame
 } systemState_t;
 
 void startState();

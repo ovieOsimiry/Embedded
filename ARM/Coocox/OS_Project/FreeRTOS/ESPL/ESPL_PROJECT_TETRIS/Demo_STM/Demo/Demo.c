@@ -41,7 +41,7 @@ void ResetGamePlay();
 void CreateNewPiece();
 void VApplicationIdleHook();
 //void sendValue(uint8_t * aByteValue);
-void sendValue(uint32_t * anIntegerValue);
+void sendValue(uint32_t  anIntegerValue);
 int calculateScore(int level, int lines);
 //static void uartReceive();
 static void checkJoystick();
@@ -61,7 +61,11 @@ int gDifficultyLevel;
 int gReceiving = 0;
 int gSending = 0;
 int gHighestScore = 0;
+int g2playerGameNoOfRoundsWon = 0;
+int g2playerGameNoOfRounds = 0;
 uint8_t gSelectionArrowPosition = 0;
+uint8_t gPlayer1NumOfLinesCompleted = 0;
+uint8_t gPlayer2NumOfLinesCompleted = 0;
 shape_t gCurrentShape;
 shape_t gNextShape;
 joystickselection_t gjoyStickSelection = JoyStickNoSelection;
@@ -74,6 +78,8 @@ playermode_t gPlayerMode = onePlayerMode;
 /*---------------------Game Play global variables used in GamePlay task-------------*/
 #define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  5;
 const uint8_t TWO_PLAYER_REQUEST_VALUE = 0xeb;
+#define TWO_PLAYER_MODE_GAME_OVER  0xab
+#define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 5
 //const int SUBSEQUENT_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 10;
 uint32_t gDifficultyCheckPoint;
 
@@ -181,9 +187,9 @@ static void SystemState()
 						}
 					else if(gjoyStickSelection == JoyStickDown)
 						{
-							uint32_t request = TWO_PLAYER_REQUEST_VALUE;
+							//uint32_t request = TWO_PLAYER_REQUEST_VALUE;
 						    gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
-							sendValue(&request);
+							sendValue(TWO_PLAYER_REQUEST_VALUE);
 							if(gReceiving == TWO_PLAYER_REQUEST_VALUE)
 							{
 								gPlayerMode = twoPlayerMode;
@@ -204,9 +210,9 @@ static void SystemState()
 						gjoyStickLastSelection=JoyStickNoSelection;
 							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
 							 {
-								uint32_t response = TWO_PLAYER_REQUEST_VALUE;
+								//uint32_t response = TWO_PLAYER_REQUEST_VALUE;
 								gReceiving = 0;
-								sendValue(&response);
+								sendValue(TWO_PLAYER_REQUEST_VALUE);
 								gSend2PlayerRequestFlag = false;
 							 }
 						}
@@ -307,12 +313,6 @@ static void SystemState()
 				break;
 				case stateGameOver:
 					maxMenuCount = 1;
-
-//					if(gjoyStickSelection==JoyStickUp)
-//						gjoyStickLastSelection =JoyStickUp ;
-//					if(gjoyStickSelection==JoyStickDown)
-//						gjoyStickLastSelection = JoyStickDown;
-
 					if(gjoyStickSelection == JoyStickUp)
 						{
 							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
@@ -341,26 +341,39 @@ static void SystemState()
 							gjoyStickLastSelection = JoyStickNoSelection;
 						}
 
+						if(gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection==JoyStickUp)//restart game
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectButtonPressed = 0;
 
-
-					if(gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection==JoyStickUp)//restart game
-					{
-						vTaskDelay(_debounceDelay);
-						gSelectButtonPressed = 0;
-
-						if(lastState==stateGame1Player)
-							setState(stateGame1Player);
-						else if(lastState==stateGame2Player)
-							setState(stateGame2Player);
-					}
-					if(gSelectButtonPressed && gSelectionArrowPosition == 1)//gjoyStickLastSelection==JoyStickDown)//go to main menu
-					{
-						vTaskDelay(_debounceDelay);
-						gSelectButtonPressed = 0;
-						gjoyStickLastSelection=JoyStickUp;
-						setState(stateMainMenu);
-					}
-
+							if(lastState==stateGame1Player)
+								setState(stateGame1Player);
+							else if(lastState==stateGame2Player)
+								setState(stateGame2Player);
+						}
+						if(gSelectButtonPressed && gSelectionArrowPosition == 1)//gjoyStickLastSelection==JoyStickDown)//go to main menu
+						{
+							vTaskDelay(_debounceDelay);
+							gSelectButtonPressed = 0;
+							gjoyStickLastSelection=JoyStickUp;
+							setState(stateMainMenu);
+						}
+					break;
+//				case stateYouWonARound2PlayerGame:
+//
+//				break;
+//				case stateYouLostARound2PlayerGame:
+//
+//				break;
+//				case stateATieOccurred2PlayerGame:
+//
+//				break;
+//				case stateYouWon2playerGame:
+//
+//				break;
+//				case stateYouLost2PlayerGame:
+//
+//				break;
 			}
 
 			vTaskDelay(10); //Without task notification synchronization the delay would be 100
@@ -416,19 +429,109 @@ static void GamePlay()
 
 				if(getState() == stateGame2Player) //if we are in 2 player mode, when lines are sent add them.
 				{
+
 					switch(gReceiving)
 					{
-						case 1:
-							AddLine(1,ptrShape);
-							gReceiving = 0;
+						case TWO_PLAYER_MODE_GAME_OVER: // Takes care of when 2nd player loses by full screen.
+							++g2playerGameNoOfRoundsWon;
+							++g2playerGameNoOfRounds;
+							if(g2playerGameNoOfRoundsWon==4){
+								//setState(stateYouWon2playerGame);
+								setState(stateGameOver);
+								g2playerGameNoOfRoundsWon = 0; //reset variable for next time
+								g2playerGameNoOfRounds = 0;
+								gReceiving = 0;
+							}else
+							{
+								//setState(stateYouWonARound2PlayerGame);
+								ResetGamePlay();
+								tempNoOfLines = 0;//reset temporary local variables within the task.
+								gReceiving = 0;//reset variable for next time
+							}
 						break;
-						case 2:
-							AddLine(2,ptrShape);
-							gReceiving = 0;
-						break;
-						case 4:
-							AddLine(4,ptrShape);
-							gReceiving = 0;
+
+						default ://Handles number of lines we receive or we generate.
+
+							if(gReceiving!=0)
+								gPlayer2NumOfLinesCompleted+=gReceiving;//keep track of second player number of lines
+
+							switch(gReceiving)
+							{
+								case 2:
+									AddLine(1,ptrShape);
+									gReceiving = 0;
+								break;
+								case 3:
+									AddLine(2,ptrShape);
+									gReceiving = 0;
+								break;
+								case 4:
+									AddLine(4,ptrShape);
+									gReceiving = 0;
+								break;
+							}
+
+							gReceiving=0;
+
+
+							//We check our line count first because it got updated in the last cycle so we need to check it if we already reached 30 lines
+							//if our line count has reached 30 lines then it means we have won a round p.
+							if(gPlayer1NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
+							{
+								if(gPlayer2NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)//we check if player 2 has also reached 30 lines and if so a tie has occurred.
+								{
+									//setState(stateATieOccurred2PlayerGame);
+									ResetGamePlay();
+									tempNoOfLines = 0;//reset temporary local variables within the task.
+									gPlayer1NumOfLinesCompleted = 0;
+									gPlayer2NumOfLinesCompleted = 0;
+								}
+								else//if no tie happened then we won the round or game.
+								{
+									++g2playerGameNoOfRoundsWon;
+									++g2playerGameNoOfRounds;
+									if(g2playerGameNoOfRoundsWon == 4){
+										//setState(stateYouWon2playerGame);
+										setState(stateGameOver);
+										g2playerGameNoOfRoundsWon = 0; //reset variable for next time
+										g2playerGameNoOfRounds = 0;
+										gPlayer1NumOfLinesCompleted = 0;
+										gPlayer2NumOfLinesCompleted = 0;
+									}
+									else
+									{
+										//setState(stateYouWonARound2PlayerGame);
+										ResetGamePlay();
+										gPlayer1NumOfLinesCompleted = 0;
+										gPlayer2NumOfLinesCompleted = 0;
+										tempNoOfLines = 0;//reset temporary local variables within the task.
+									}
+								}
+							}
+							else if(gPlayer2NumOfLinesCompleted==TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
+							{
+								//setState(stateYouLostARound2PlayerGame);
+								++g2playerGameNoOfRoundsWon;
+								++g2playerGameNoOfRounds;
+								if(g2playerGameNoOfRoundsWon == 4)
+								{
+									//setState(stateYouWon2playerGame);
+									setState(stateGameOver);
+									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
+									g2playerGameNoOfRounds = 0;
+								}
+								else
+								{
+									//setState(stateYouWonARound2PlayerGame);
+									ResetGamePlay();
+									tempNoOfLines = 0;//reset temporary local variables within the task.
+									gPlayer1NumOfLinesCompleted = 0;
+									gPlayer2NumOfLinesCompleted = 0;
+								}
+
+							}
+
+
 						break;
 					}
 				}
@@ -464,27 +567,12 @@ static void GamePlay()
 							gHighestScore = gGameScore;
 						}
 						gShapeDownMovementSpeedGaurd=false;
+						gPlayer1NumOfLinesCompleted+=tempNoOfLines;//Number of lines completed
+
 						if(tempNoOfLines>=1 && getState()==stateGame2Player)
 							{
-								uint32_t temp;
-								switch(tempNoOfLines)
-								{
-								case 2:
-									temp = 1;
-									gSending = temp;
-									sendValue(&temp);
-									break;
-								case 3:
-									temp = 2;
-									gSending = temp;
-									sendValue(&temp);
-									break;
-								case 4:
-									temp = 4;
-									gSending = temp;
-									sendValue(&temp);
-									break;
-								}
+								//uint32_t temp;
+								sendValue(tempNoOfLines);
 							}
 
 						if(!isGameOver())
@@ -493,6 +581,10 @@ static void GamePlay()
 						 }
 						else
 						 {
+							//##not yet complete please take note.
+							if(getState()==stateGame2Player){
+								sendValue(TWO_PLAYER_MODE_GAME_OVER);//takes care of when you lost a round due to full screen in 2 player mode.
+							}
 							setState(stateGameOver);
 						 }
 					}
@@ -631,7 +723,7 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
 			  /* Button E will Reset all counters */
 			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
-				  if(getState()!=stateMainMenu)// && getState() != 2)
+				  if(getState()!=stateMainMenu || getState()!=stateGameOver)
 				  {
 					  setState(stateGamePaused);
 				  	  debounce = 1;
@@ -810,16 +902,16 @@ void timerStart(){
 }
 /************************************************************************************************/
 
-void sendValue(uint32_t * anIntegerValue)
+void sendValue(uint32_t  anIntegerValue)
 {
 	//static uint8_t xorChar = 0xeb;
 	uint8_t bytes[4];
 	char checksum;
 
-	bytes[3] = (*anIntegerValue >> 24) & 0xFF;
-	bytes[2] = (*anIntegerValue >> 16) & 0xFF;
-	bytes[1] = (*anIntegerValue >> 8) & 0xFF;
-	bytes[0] = *anIntegerValue & 0xFF;
+	bytes[3] = (anIntegerValue >> 24) & 0xFF;
+	bytes[2] = (anIntegerValue >> 16) & 0xFF;
+	bytes[1] = (anIntegerValue >> 8) & 0xFF;
+	bytes[0] = anIntegerValue & 0xFF;
 	// Generate simple error detection checksum
 	//checksum = xorChar^(*aByteValue);
 	checksum = bytes[3] ^ bytes[2] ^ bytes[1] ^ bytes[0];
@@ -928,61 +1020,6 @@ void sendLine(struct coord coord_1, struct coord coord_2) {
 	UART_SendData((uint8_t) ESPL_StopByte);
 }
 
-/*
- * Task which receives data via UART and decodes it.
- */
-//static void uartReceive() {
-//	char input;
-//	uint8_t pos = 0;
-//	char checksum;
-//	char buffer[7]; // Start byte,4* line byte, checksum (all xor), End byte
-//	struct line line;
-//	while (TRUE) {
-//		// wait for data in queue
-//		xQueueReceive(ESPL_RxQueue, &input, portMAX_DELAY);
-//		// decode package by buffer position
-//		switch (pos) {
-//			// start byte
-//			case 0:
-//				if (input == ESPL_StartByte) {
-//					buffer[0] = input;
-//					pos = 1;
-//				}
-//				break;
-//			// line bytes
-//			case 1:
-//			case 2:
-//			case 3:
-//			case 4:
-//			// Check sum
-//			case 5:
-//				buffer[pos] = input;
-//				pos++;
-//				break;
-//			// Last byte should be stop byte
-//			case 6:
-//				if (input == ESPL_StopByte) {
-//					// Check if checksum is accurate
-//					checksum = buffer[1] ^ buffer[2] ^ buffer[3] ^ buffer[4];
-//					// Decode packet to line struct
-//					if (buffer[5] == checksum) {
-//						line.x_1 = buffer[1] / 2;
-//						line.y_1 = buffer[2] / 2;
-//						line.x_2 = buffer[3] / 2;
-//						line.y_2 = buffer[4] / 2;
-//						// Send line to be drawn
-//						xQueueSend(DrawQueue, &line, 100);
-//						pos = 0;
-//					} else {
-//						// Reset buffer
-//						pos = 0;
-//					}
-//				} else {
-//					pos = 0;
-//				}
-//		}
-//	}
-//}
 
 /**
  * Idle hook, definition is needed for FreeRTOS to function.

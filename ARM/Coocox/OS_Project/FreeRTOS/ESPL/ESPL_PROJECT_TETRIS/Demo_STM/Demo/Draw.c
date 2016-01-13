@@ -150,7 +150,7 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int rece
 	}
 
 	int adjustment = 0;
-	if(state = stateGame1Player)
+	if(state == stateGame1Player)
 	{
 	    gdispFillArea(170+30-5+adjustment, 0+20-10 , 100+10,30+10, Blue);
 	    gdispFillArea(170+30-5+adjustment, 0+70-10 , 100+10,30+10, Blue);
