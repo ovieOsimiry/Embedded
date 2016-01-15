@@ -3,7 +3,7 @@
 
 #include "includes.h"
 #include "Shape.h"
-#include "Election.h"
+#include "SystemState.h"
 
 /*-------------------PLEASE DO NOT EDIT!!!----------------*/
 #define BOARD_POSITION 50

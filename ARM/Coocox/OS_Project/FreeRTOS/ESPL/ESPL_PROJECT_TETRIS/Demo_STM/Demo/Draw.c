@@ -9,7 +9,7 @@
  */
 
 #include "Draw.h"
-#include "Election.h"
+#include "SystemState.h"
 
 
 void DrawNextShape(shape_t * ptrShape);
@@ -27,8 +27,6 @@ color_t GetColor(char color);
 
 static int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
-//int BoardMatrix [BOARD_HEIGHT_IN_BLOCKS][BOARD_WIDTH_IN_BLOCKS];
-
 /*-------------------------------------------------------------------------------------------------------
  * @desc This function clears the board Matrix by initializing all elements to 0
  * -----------------------------------------------------------------------------------------------------*/
@@ -43,25 +41,22 @@ void InitializeBoardMatrix()
 
 void DrawShapeWithHandle(shape_t * ptrShape)
 {
-	color_t mColor;				// Color of the block
+	color_t mColor;// Color of the block
 
-	// Travel the matrix of blocks of the piece and draw the blocks that are filled
+	// Traverse the shape matrix and draw the relevant blocks
 	for (int i = 0; i < SHAPE_MATRIX_DIMENSION; i++)
 	{
 		for (int j = 0; j < SHAPE_MATRIX_DIMENSION; j++)
 		{
 			// Get the type of the block and select the right color
-			//switch(ptrShape->GetAPeiceFromShape(ptrShape,j,i))
 			switch(ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j,i))
 			{
-				case 1: mColor = Red; break;	//
-				case 2: mColor = Yellow; break;	//
-				case 3: mColor = Green; break;	//
-				case 4: mColor = Orange; break;	//
+				case 1: mColor = Red; break;
+				case 2: mColor = Yellow; break;
+				case 3: mColor = Green; break;
+				case 4: mColor = Orange; break;
 			}
-			//if(ptrShape->GetAPeiceFromShape(ptrShape,j,i))
-			 if(ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j, i) != 0)
-			//gdispFillArea(((mPixelsX+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS+BOARDER_THICKNESS,((mPixelsY+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,mColor);
+			if(ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j, i) != 0)
 			DrawCustomBlock(((ptrShape->x+i)*BLOCK_SIZE)+BOARD_OFFSET_X_AXIS + BOARDER_THICKNESS,((ptrShape->y+j)*BLOCK_SIZE)+BOARD_OFFSET_Y_AXIS,BLOCK_SIZE,BLOCK_SIZE,mColor);
 		}
 	}
@@ -86,7 +81,7 @@ void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color
  *@param ptrShape - next shape
  *@return void function
  * ------------------------------------------- */
-void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
+void DrawNextShape(shape_t * ptrShape)
 {
 	color_t mColor;				// Color of the block
 	for (int i = 0; i < SHAPE_MATRIX_DIMENSION; i++)
@@ -94,18 +89,15 @@ void DrawNextShape(shape_t * ptrShape)//(int type, int orientation)
 		for (int j = 0; j < SHAPE_MATRIX_DIMENSION; j++)
 		{
 			// Get the type of the block and draw it with the correct color
-			//switch (ptrShape->GetAPeiceFromShape(ptrShape,j,i))
-			switch (ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j,i ))//(GetAPeiceFromTheShape (type, orientation, j, i))
+			switch (ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j,i ))
 			{
-				case 1: mColor = Red; break;	// For each block of the piece except the pivot
-				case 2: mColor = Yellow; break;	//
-				case 3: mColor = Green; break;	//
-				case 4: mColor = Orange; break;	//
+				case 1: mColor = Red; break;
+				case 2: mColor = Yellow; break;
+				case 3: mColor = Green; break;
+				case 4: mColor = Orange; break;
 			}
 
-			//if (ptrShape->GetAPeiceFromShape(ptrShape,j,i)!= 0)
 			if (ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j,i)!= 0)
-			//gdispFillArea(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+168,BLOCK_SIZE,BLOCK_SIZE,mColor);
 			DrawCustomBlock(i*BLOCK_SIZE+170+60,j*BLOCK_SIZE+0+168,BLOCK_SIZE,BLOCK_SIZE,mColor);
 		}
 	}
@@ -269,12 +261,12 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	for(int i = 0; i <= 240-10; i = i+10)
 	{
 		color_t mColor;
-		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		switch (j)
 		{
-			case 1: mColor = Red; break;	// For each block of the piece except the pivot
-			case 2: mColor = Yellow; break;	//
-			case 3: mColor = Green; break;	//
-			case 4: mColor = Orange; break;	//
+			case 1: mColor = Red; break;
+			case 2: mColor = Yellow; break;
+			case 3: mColor = Green; break;
+			case 4: mColor = Orange; break;
 			case 5: mColor = Blue; break;
 		}
 
@@ -486,7 +478,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
  *@param gSelectionArrowPosition - Possible selection according to the joystick
  *@return void function
  * ------------------------------------------- */
-void DrawGameOver(const uint8_t * gSelectionArrowPosition)//(const joystickselection_t * joystickselection  )
+void DrawGameOver(const uint8_t * gSelectionArrowPosition)
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);

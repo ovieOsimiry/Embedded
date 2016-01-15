@@ -1,5 +1,5 @@
-#ifndef ELECTION_H
-#define ELECTION_H
+#ifndef SYSTEMSTATE_H
+#define SYSTEMSTATE_H
 
 
 typedef enum

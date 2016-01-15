@@ -11,7 +11,7 @@
 #include "includes.h"
 #include "Draw.h"
 #include "Shape.h"
-#include "Election.h"
+#include "SystemState.h"
 #include "time.h"
 
 
@@ -107,16 +107,16 @@ TimerHandle_t xTimers; //Define the de-bouncing timer
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
-	//Debouncing timer initialization
+	//Initialize debounce button
 	timerInit();
 
-	//Initialites states of the game
+	//Initialise the state of the game to main menu
 	startState();
 
 	// Initializes Draw Queue with 100 lines buffer
 	DrawQueue = xQueueCreate(100, 4 * sizeof(char));
 
-	// Initializes Tasks with their respective priority
+	// Initialise all Tasks with their respective priority
 	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	//xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
