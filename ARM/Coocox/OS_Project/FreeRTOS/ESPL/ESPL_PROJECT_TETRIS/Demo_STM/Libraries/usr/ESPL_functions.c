@@ -67,7 +67,6 @@ void gpioInit() {
 	GPIO_InitStruct.GPIO_Pin = ESPL_Pins_GPIOA;
 	GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	//## Connect External Buttons to EXTI module
 	EXTI_InitTypeDef   EXTI_InitStructure;
 	NVIC_InitTypeDef   NVIC_InitStructure;
 	/* Enable SYSCFG clock */
@@ -88,14 +87,6 @@ void gpioInit() {
 	   NVIC_InitStructure.NVIC_IRQChannelSubPriority = configLIBRARY_LOWEST_INTERRUPT_PRIORITY;
 	   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	   NVIC_Init(&NVIC_InitStructure);
-
-	   /* Connect Button D pin to EXTI line 2*/
-	   SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource2);//Configure ESPL_Pin_Button_D as EXTI input
-	  EXTI_InitStructure.EXTI_Line = EXTI_Line2;
-	  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-	  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-	  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-	  EXTI_Init(&EXTI_InitStructure);
 
   /* Enable and set EXTI2 Interrupt to the lowest priority */
 	   NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
@@ -142,7 +133,6 @@ void gpioInit() {
 	   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	   NVIC_Init(&NVIC_InitStructure);
 
-//##
 
 
 	// Initialize ADC for both axes
@@ -279,8 +269,6 @@ void ESPL_SystemInit(void) {
 	LTDC_LayerAlpha(LTDC_Layer2, 0xFF);
 
 	LTDC_ReloadConfig(LTDC_IMReload);
-//	gdispSetOrientation(GDISP_ROTATE_270);
-//	gdispSetOrientation(GDISP_ROTATE_LANDSCAPE);
 
 	/*Initialize UART Receive Queue*/
 	ESPL_RxQueue = xQueueCreate(100, sizeof(char));

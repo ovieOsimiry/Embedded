@@ -19,7 +19,7 @@
 #define ESPL_StartByte 0xAA
 #define ESPL_StopByte 0x55
 
-#define HORIZONTAL_CONTROL_MOVE_SPEED 4
+
 
 QueueHandle_t ESPL_RxQueue; // Already defined in ESPL_Functions.h
 SemaphoreHandle_t ESPL_DisplayReady;
@@ -79,7 +79,8 @@ playermode_t gPlayerMode = onePlayerMode;
 const uint8_t TWO_PLAYER_REQUEST_VALUE = 0xeb;
 #define TWO_PLAYER_MODE_GAME_OVER  0xab
 #define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 30
-//const int SUBSEQUENT_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 10;
+#define HORIZONTAL_CONTROL_MOVE_SPEED 4
+#define VERTICAL_CONTROL_MOVE_SPEED 2
 uint32_t gDifficultyCheckPoint;
 
 /*------------------------------------------------------------------------------------*/
@@ -115,13 +116,17 @@ int main() {
 	DrawQueue = xQueueCreate(100, 4 * sizeof(char));
 
 	// Initialise all Tasks with their respective priority
-	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
-	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
-	//xTaskCreate(uartReceive, "queueReceive", 1000, NULL, 2, NULL);
-	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 2, NULL);
+//	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
+//	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
+//	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 2, NULL);
+//	xTaskCreate(GamePlay, "GamePlay", 1000, NULL, 3, &gTaskSynchroNotification);
+//	xTaskCreate(SystemState, "SystemState", 1000, NULL, 3, NULL);
+
+	xTaskCreate(drawTask, "drawTask", 1000, NULL, 2, NULL);
+	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 4, NULL);
+	xTaskCreate(ReceiveValue, "ReceiveValue", 1000, NULL, 4, NULL);
 	xTaskCreate(GamePlay, "GamePlay", 1000, NULL, 3, &gTaskSynchroNotification);
 	xTaskCreate(SystemState, "SystemState", 1000, NULL, 3, NULL);
-
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
 }
@@ -151,7 +156,7 @@ void CreateNewShape()
 static void SystemState()
 {
 	TickType_t _debounceDelay = 300;
-	/*------------------------Initialize all variables used within this task----------------*/
+	/*------------------------Initialise all variables used within this task----------------*/
 	gPlayerMode = onePlayerMode;
     gjoyStickLastSelection = JoyStickUp;
     gSelectButtonPressed = 0;
@@ -172,21 +177,20 @@ static void SystemState()
 						{
 						   gPlayerMode = onePlayerMode;
 						   gReceiving = 0;
-						  // gjoyStickLastSelection = JoyStickUp;
+
 						   if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
 							{
 								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
 								if(gSelectionArrowPosition!=0)
 								{
-									--gSelectionArrowPosition;//--selectionArrowPosition;
+									--gSelectionArrowPosition;
 								}
 								gjoyStickLastSelection = JoyStickUp;
 							}
 						}
 					else if(gjoyStickSelection == JoyStickDown)
 						{
-							//uint32_t request = TWO_PLAYER_REQUEST_VALUE;
-						    gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
+							gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
 							sendValue(TWO_PLAYER_REQUEST_VALUE);
 							if(gReceiving == TWO_PLAYER_REQUEST_VALUE)
 							{
@@ -197,38 +201,36 @@ static void SystemState()
 								{
 									if(gSelectionArrowPosition!=maxMenuCount)
 									{
-										++gSelectionArrowPosition;//--selectionArrowPosition;
+										++gSelectionArrowPosition;
 									}
-									//gjoyStickLastSelection = JoyStickDown;
 								}
 							}
 						}
-					else//(gjoyStickSelection==JoyStickNoSelection)
+					else
 						{
 						gjoyStickLastSelection=JoyStickNoSelection;
 							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
 							 {
-								//uint32_t response = TWO_PLAYER_REQUEST_VALUE;
 								gReceiving = 0;
 								sendValue(TWO_PLAYER_REQUEST_VALUE);
 								gSend2PlayerRequestFlag = false;
 							 }
 						}
-						if (gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection == JoyStickDown)
+						if (gSelectButtonPressed && gSelectionArrowPosition==0)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 							gReceiving = 0;
-							setState(stateGame1Player);//setState(3); //1 player mode
+							setState(stateGame1Player);//1 player mode
 							gSelectionArrowPosition = 0;
 						}
 
-						if (gSelectButtonPressed && gSelectionArrowPosition==1)//gjoyStickLastSelection == JoyStickUp)
+						if (gSelectButtonPressed && gSelectionArrowPosition==1)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 							gReceiving = 0;
-							setState(stateGame2Player);//setState(2);//2 player mode
+							setState(stateGame2Player);//2 player mode
 							gSelectionArrowPosition = 0;
 						}
 				break;
@@ -244,7 +246,7 @@ static void SystemState()
 				case stateGame2Player:
 					gSelectButtonPressed = 0;
 					lastState = stateGame2Player;
-					//We wake up the Gameplay task if we are in state 3 (gaming screen in one player mode)
+					//We wake up the Gameplay task if we are in  stateGame1Player or stateGame2Player (gaming screen in one player mode)
 					xTaskNotifyGive(gTaskSynchroNotification);
 
 				break;
@@ -257,7 +259,7 @@ static void SystemState()
 								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
 								if(gSelectionArrowPosition!=0)
 								{
-									--gSelectionArrowPosition;//--selectionArrowPosition;
+									--gSelectionArrowPosition;
 								}
 								gjoyStickLastSelection = JoyStickUp;
 							}
@@ -318,7 +320,7 @@ static void SystemState()
 								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
 								if(gSelectionArrowPosition!=0)
 								{
-									--gSelectionArrowPosition;//--selectionArrowPosition;
+									--gSelectionArrowPosition;
 								}
 								gjoyStickLastSelection = JoyStickUp;
 							}
@@ -357,21 +359,6 @@ static void SystemState()
 							setState(stateMainMenu);
 						}
 					break;
-//				case stateYouWonARound2PlayerGame:
-//
-//				break;
-//				case stateYouLostARound2PlayerGame:
-//
-//				break;
-//				case stateATieOccurred2PlayerGame:
-//
-//				break;
-//				case stateYouWon2playerGame:
-//
-//				break;
-//				case stateYouLost2PlayerGame:
-//
-//				break;
 			}
 
 			vTaskDelay(10); //Without task notification synchronization the delay would be 100
@@ -382,12 +369,12 @@ static void GamePlay()
 {
 		shape_t * ptrShape = &gCurrentShape;
 		shape_t shapeTemp;// used for temporary calculations
-		//const int MAX_DIFFICULTY_TIMER_VALUE = 1000;
 		const int MAX_DIFFICULTY_LEVEL = 9;
 		const char MAX_TICK = 100;
 		int tick = 0;
 		boolean_t downMovePossible = true;
 		int tempNoOfLines = 0;
+		char verticalSpeed = 0;
 //@-------------------------------------------
 		int randNo;
 		TM_RNG_Init();
@@ -429,7 +416,6 @@ static void GamePlay()
 							++g2playerGameNoOfRoundsWon;
 							++g2playerGameNoOfRounds;
 							if(g2playerGameNoOfRoundsWon==4){
-								//setState(stateYouWon2playerGame);
 								gWhoWon = 1;
 								setState(stateGameOver);
 								g2playerGameNoOfRoundsWon = 0; //reset variable for next time
@@ -439,7 +425,6 @@ static void GamePlay()
 								gReceiving = 0;
 							}else
 							{
-								//setState(stateYouWonARound2PlayerGame);
 								ResetGamePlay();
 								tempNoOfLines = 0;//reset temporary local variables within the task.
 								gPlayer1NumOfLinesCompleted = 0;
@@ -478,7 +463,6 @@ static void GamePlay()
 							{
 								if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)//we check if player 2 has also reached 30 lines and if so a tie has occurred.
 								{
-									//setState(stateATieOccurred2PlayerGame);
 									ResetGamePlay();
 									tempNoOfLines = 0;//reset temporary local variables within the task.
 									gPlayer1NumOfLinesCompleted = 0;
@@ -489,7 +473,6 @@ static void GamePlay()
 									++g2playerGameNoOfRoundsWon;
 									++g2playerGameNoOfRounds;
 									if(g2playerGameNoOfRoundsWon == 4){
-										//setState(stateYouWon2playerGame);
 										gWhoWon = 1;
 										setState(stateGameOver);
 										g2playerGameNoOfRoundsWon = 0; //reset variable for next time
@@ -499,7 +482,6 @@ static void GamePlay()
 									}
 									else
 									{
-										//setState(stateYouWonARound2PlayerGame);
 										ResetGamePlay();
 										gPlayer1NumOfLinesCompleted = 0;
 										gPlayer2NumOfLinesCompleted = 0;
@@ -509,11 +491,9 @@ static void GamePlay()
 							}
 							else if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
 							{
-								//setState(stateYouLostARound2PlayerGame);
 								++g2playerGameNoOfRounds;
 								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon) == 4)
 								{
-									//setState(stateYouWon2playerGame);
 									gWhoWon = 2;
 									setState(stateGameOver);
 									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
@@ -523,7 +503,6 @@ static void GamePlay()
 								}
 								else
 								{
-									//setState(stateYouWonARound2PlayerGame);
 									ResetGamePlay();
 									tempNoOfLines = 0;//reset temporary local variables within the task.
 									gPlayer1NumOfLinesCompleted = 0;
@@ -542,20 +521,26 @@ static void GamePlay()
 				else
 					tick++;
 
-			//if( (tick==(MAX_TICK/(gDifficultyLevel+1)) && (getState()==3 || getState()==2) ) ||
-			//	((gjoyStickSelection == JoyStickDown) && (getState()==3  || getState()==2) && (gShapeDownMovementSpeedGaurd == true) ))
-				if( (tick==(MAX_TICK/(gDifficultyLevel+1))) ||
-				((gjoyStickSelection == JoyStickDown) && (gShapeDownMovementSpeedGaurd == true) ))
+			if( (tick==(MAX_TICK/(gDifficultyLevel+1))) || ((gjoyStickSelection == JoyStickDown) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
-					shapeTemp =  *ptrShape;//currentShape;
+					shapeTemp =  *ptrShape;
 					shapeTemp.y = shapeTemp.y + 1;
-					downMovePossible = IsMoveMentPossible(&shapeTemp);//downMovePossible = IsMoveMentPossible(_shape,x, lastY+1);
+					downMovePossible = IsMoveMentPossible(&shapeTemp);
 					if(downMovePossible==true)
 					{
 						if (ptrShape->y==20)
 							ptrShape->y = 0;
 						else
-							ptrShape->y+=1;
+						{
+							if(verticalSpeed == VERTICAL_CONTROL_MOVE_SPEED)
+							{
+								verticalSpeed = 0;
+								ptrShape->y+=1;
+							}else
+							{
+								++verticalSpeed;
+							}
+						}
 					}
 					else
 					{
@@ -572,7 +557,6 @@ static void GamePlay()
 
 						if(tempNoOfLines>=1 && getState()==stateGame2Player)
 							{
-								//uint32_t temp;
 								sendValue(tempNoOfLines);
 							}
 
@@ -582,7 +566,7 @@ static void GamePlay()
 						 }
 						else
 						 {
-							//##not yet complete please take note.
+
 							if(getState()==stateGame2Player){
 								sendValue(TWO_PLAYER_MODE_GAME_OVER);//Notify the other player you lost. takes care of when you lost a round due to full screen in 2 player mode.
 								ResetGamePlay();
@@ -590,7 +574,6 @@ static void GamePlay()
 								++g2playerGameNoOfRounds;
 								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon)  == 4)
 								{
-									//setState(stateYouWon2playerGame);
 									gWhoWon = 2;
 									setState(stateGameOver);
 									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
@@ -600,7 +583,6 @@ static void GamePlay()
 								}
 								else
 								{
-									//setState(stateYouWonARound2PlayerGame);
 									ResetGamePlay();
 									tempNoOfLines = 0;//reset temporary local variables within the task.
 									gPlayer1NumOfLinesCompleted = 0;
@@ -632,11 +614,8 @@ static void GamePlay()
  * ------------------------------------------- */
 static void drawTask() {
 
-//	char str[100]; // Init buffer for message
-	struct line line; // Init buffer for line
 
-//	font_t font1; // Load font for ugfx
-//	font1 = gdispOpenFont("DejaVuSans32*");
+	struct line line; // Init buffer for line
 	InitializeBoardMatrix();
 	gdispClear(White);
 
@@ -650,8 +629,6 @@ static void drawTask() {
 		// draw to display
 		gdispClear(Black);
 
-		//DrawShape (BOARD_WIDTH/2*BLOCK_SIZE, verticalMove*BLOCK_SIZE, 5, rotation);
-
 		if(getState()==stateMainMenu)
 		{
 			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode, &gHighestScore);
@@ -661,12 +638,13 @@ static void drawTask() {
 					g2playerGameNoOfRounds, gPlayer2NumOfLinesCompleted,getState());
 			DrawShapeWithHandle(&gCurrentShape);
 		}
-		else if(getState()== stateGamePaused){// || getState() == 5 || getState() == 6){
+		else if(getState()== stateGamePaused)
+		{
 			DrawPauseMenu(&gSelectionArrowPosition);
 		}
 		else if(getState()==stateGameOver)
 		{
-			DrawGameOver(&gSelectionArrowPosition,gWhoWon);//(&gjoyStickLastSelection);
+			DrawGameOver(&gSelectionArrowPosition,gWhoWon);
 		}
 
 		// Wait for display to stop writing
@@ -751,25 +729,6 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
   }
 }
 
-/* -------------------------------------------
- *@desc: External interrupt handler for Button D. Button D does nothing.
- *
- *@param:	- void
- *
- *@return:	- void
- * ------------------------------------------- */
-void EXTI2_IRQHandler(void)//Button D interrupt handler
-{
-	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
-	  {
-		if (GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D)==0)
-		{
-
-		}
-	    /* Clear the EXTI line 0 pending bit */
-	    EXTI_ClearITPendingBit(EXTI_Line2);
-	  }
-}
 
 /* -------------------------------------------
  *@desc: External interrupt handler for Button B. Selects the option on which the pointer is.
@@ -890,13 +849,10 @@ static void checkJoystick() {
 			if(joystick_now.y > 135) //Joystick is moved downwards.
 			{
 				gjoyStickSelection = JoyStickDown;
-				//#if(getState()!=3 && getState()!=2) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
 			else if((joystick_now.y < 110))//Joystick moved upwards
 			{
 				gjoyStickSelection = JoyStickUp;
-				//#if(getState!=3) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
-				//#if(getState()!=3 && getState()!=2) vTaskDelay(200); //If we are not in the state 3(playing the game), we delay the polling so it doesn't change between options too quick
 			}
 			else
 			{
@@ -954,7 +910,6 @@ void timerStart(){
 
 void sendValue(uint32_t  anIntegerValue)
 {
-	//static uint8_t xorChar = 0xeb;
 	uint8_t bytes[4];
 	char checksum;
 
@@ -963,7 +918,6 @@ void sendValue(uint32_t  anIntegerValue)
 	bytes[1] = (anIntegerValue >> 8) & 0xFF;
 	bytes[0] = anIntegerValue & 0xFF;
 	// Generate simple error detection checksum
-	//checksum = xorChar^(*aByteValue);
 	checksum = bytes[3] ^ bytes[2] ^ bytes[1] ^ bytes[0];
 	// Structure of one packet:
 	//  Start byte
@@ -986,10 +940,9 @@ void sendValue(uint32_t  anIntegerValue)
 static void ReceiveValue()
 {
 	char input;
-	//static uint8_t xorChar = 0xeb;
 	uint8_t pos = 0;
 	char checksum;
-	char buffer[7]; // Start byte,4* line byte, checksum (all xor), End byte
+	char buffer[7];
 	//struct line line;
 	while (TRUE)
 	 {
