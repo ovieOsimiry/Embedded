@@ -29,8 +29,8 @@ static const char Array_T [4][5][5];			//Structure array that defines the T shap
 
 ------------------------------------------------------------------------------------------------------*/
 
-char ReturnAnElementFrom3DArray(const char *arr, char shapeOrientation, short X, short Y) {
-	return *(arr + (shapeOrientation*25) + (X*5) + Y);
+char ReturnAnElementFrom3DArray(const char *arr, char shapeOrientation, short Y, short X) {
+	return *(arr + (shapeOrientation*25) + (Y*5) + X);
 }
 
 

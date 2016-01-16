@@ -13,14 +13,7 @@
 
 
 void DrawNextShape(shape_t * ptrShape);
-int GetYCoordForButtomOfShape(shape_t * ptrShape);
-void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate);
-void GetXCoordsForBothSidesOfShape(shape_t * ptrShape, coord_t * xRight, coord_t * xLeft);
-boolean_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard);
-
 void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color);
-
-int CheckForUnRemovableLine();
 char GetPeiceType (int pX, int pY);
 void DeleteLine (int pY);
 color_t GetColor(char color);
@@ -28,7 +21,11 @@ color_t GetColor(char color);
 static int BoardMatrix [BOARD_WIDTH_IN_BLOCKS][BOARD_HEIGHT_IN_BLOCKS];
 
 /*-------------------------------------------------------------------------------------------------------
- * @desc This function clears the board Matrix by initializing all elements to 0
+ *@desc: This function clears the board Matrix by initializing all elements to 0
+ *
+ *@param:	- void
+ *
+ *@return:	- void
  * -----------------------------------------------------------------------------------------------------*/
 void InitializeBoardMatrix()
 {
@@ -842,185 +839,22 @@ void DeleteLine (int pY)
 	}
 }
 
-int CheckForUnRemovableLine()
-{
-	for (int j = 0; j <= BOARD_HEIGHT_IN_BLOCKS; j++)
-		{
-			if(BoardMatrix[0][j]==5)
-				//if we find an already existing un-removable line then we return the row number of the next matrix line above
-				return j-1; //check later, to avoid negative value.
-		}
-	return (BOARD_HEIGHT_IN_BLOCKS-1);
-}
 
-void GetHeighestPointOnBoard(coord_t * xRightCoordinate, coord_t * xLeftCoordinate, coord_t * yCordinate)
-{
-	*yCordinate = 19;
-	*xLeftCoordinate = 0;
-	*xRightCoordinate = 0;
-	for(int j = 0; j < BOARD_HEIGHT_IN_BLOCKS; j++)
-		{
-			for(int i = 0; i<BOARD_WIDTH_IN_BLOCKS; i++)
-			{
-				if(BoardMatrix[i][j]!=0 && BoardMatrix[i][j]!=5)//if(BoardMatrix[i][j]!=0)
-				{
-				//if we find an already existing shape on the board we take the x and y coordinate of the shape.
-				//we will use these values to compare with the x and y coordinate of the falling shape
-					*xLeftCoordinate = i;// we have found the left side of the x coordinate for the shape
-					*yCordinate = j-1; //check later, to avoid negative value.
-					for(i = BOARD_WIDTH_IN_BLOCKS-1; i>=0; i--)
-					{
-						if(BoardMatrix[i][j]!=0)
-							{
-							 *xRightCoordinate = i;// we have found the right side of the x coordinate for the shape
-							 return;
-							}
-					}
-				}
-			}
-		}
-}
-
-int GetYCoordForButtomOfShape(shape_t * ptrShape)
-{
-	int aPeiceOfShape = 0;
-	for(int x = 4; x>=0; x--)
-	{
-		for(int y = 0; y<=4; y++)
-		{
-			//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);
-			aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
-			if(aPeiceOfShape!=0)
-				return x;
-		}
-
-	}
-	return 0;
-}
-
-void GetXCoordsForBothSidesOfShape(shape_t * ptrShape, coord_t * xRight, coord_t * xLeft)
-{
-	int aPeiceOfShape = 0;
-
-	for(int x = 0; x<5; x++)
-	{
-		for(int y = 0; y<=4; y++)
-		{
-			//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);//
-			aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
-			if(aPeiceOfShape!=0)
-			{
-				*xLeft = y;
-				 break;
-			}
-		}
-
-	}
-
-	for(int x = 0; x<5; x++)
-		{
-			for(int y = 4; y>=0; y--)
-			{
-				//aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape,x,y);
-				aPeiceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,x,y);
-				if(aPeiceOfShape!=0)
-				{
-					*xRight = y;
-					 break;
-				}
-			}
-
-		}
-return;
-}
-
-boolean_t CheckForCollision(coord_t shapeXCoordRight, coord_t shapeXCoordLeft, coord_t rightXCoordOfHeighestPointOnTheBoard, coord_t leftXCoordOfHeighestPointOnTheBoard)
-	{
-		for(int j=shapeXCoordLeft;j<=shapeXCoordRight;j++)
-		{
-			for(int i=leftXCoordOfHeighestPointOnTheBoard;i<=rightXCoordOfHeighestPointOnTheBoard;i++)
-			{
-				if(i==j)
-					return true;
-			}
-		}
-		return false;
-	}
-
-void AddLine(int NumOfLines, shape_t * ptrShape)
-{
-	int StartPos;
-	int DistanceBtwShapeAndNewBaseOfBoard;//distance between the bottom of the shape and the new refernece base of the board
-	int DistBtwShapeAndHeighestPointOnBoard;
-	int yCoordForBtmOfShape;
-	int baseOfShape;
-	coord_t rightXCoordOfHeighestPointOnTheBoard;
-	coord_t leftXCoordOfHeighestPointOnTheBoard;
-	coord_t yCoordOfHeighestPointOnTheBoard;
-	coord_t shapeXCoordRight;
-	coord_t shapeXCoordLeft;
-
-	GetHeighestPointOnBoard(&rightXCoordOfHeighestPointOnTheBoard, &leftXCoordOfHeighestPointOnTheBoard, &yCoordOfHeighestPointOnTheBoard);
-	GetXCoordsForBothSidesOfShape(ptrShape,&shapeXCoordRight,&shapeXCoordLeft);
-
-	shapeXCoordLeft = shapeXCoordLeft + ptrShape->x;
-	shapeXCoordRight = (ptrShape->x + 4) - shapeXCoordRight;
-
-	baseOfShape = GetYCoordForButtomOfShape(ptrShape);
-	yCoordForBtmOfShape = ptrShape->y + baseOfShape;
-	StartPos = CheckForUnRemovableLine();
-
-	DistanceBtwShapeAndNewBaseOfBoard = StartPos - yCoordForBtmOfShape;
-	DistBtwShapeAndHeighestPointOnBoard = yCoordOfHeighestPointOnTheBoard - yCoordForBtmOfShape;
-
-
-	if(CheckForCollision(shapeXCoordRight,shapeXCoordLeft, rightXCoordOfHeighestPointOnTheBoard, leftXCoordOfHeighestPointOnTheBoard ))
-	{
-		if(DistBtwShapeAndHeighestPointOnBoard < NumOfLines)
-		{
-			ptrShape->y = ptrShape->y - (NumOfLines - DistBtwShapeAndHeighestPointOnBoard);
-		}
-	}
-
-	else if((DistanceBtwShapeAndNewBaseOfBoard) < NumOfLines)
-		{
-			(ptrShape->y) = (ptrShape->y) - (NumOfLines - DistanceBtwShapeAndNewBaseOfBoard);
-		}
-
-	/*------Beginning from the bottom, move each line of block up by a number equal to the number of lines that will be added----*/
-
-		for (int j = 0; j <= (StartPos-NumOfLines); j++)
-			{
-				for (int i = 0; i < BOARD_WIDTH_IN_BLOCKS; i++)
-				{
-					BoardMatrix[i][j] = BoardMatrix[i][j+NumOfLines];//#check here for negative value when ([j-NumOfLines])
-				}
-			}
-
-
-	/*--------------------------------------------------------------------------------*/
-
-	/*--------------------Add the number of Unremovable blocks specified in NumOfLines-----------*/
-		for (int j = StartPos; j > (StartPos-NumOfLines); j--)
-			{
-					for (int i = 0; i < BOARD_WIDTH_IN_BLOCKS; i++)
-					{
-						BoardMatrix[i][j] = 5; // assign space as an un-removable peice.
-					}
-			}
-	/*--------------------------------------------------------------------------------------------*/
-}
-
-/***********************************************************************************************************
+/*-------------------------------------------
  *
- * Checks, if there is a shape block just above the upper limit block of the column
- * If the shape is just above, it changes the value of ShapeAbove to true so the addLine function knows that
- * the shape has to be moved 1 position up.
- * It also stores the value of the gap between the lower block of the falling shape and the limit base block,
- * so when we move up the shape, we only move it the number of unremovable lines added minus the gap that
- * were between the lower block of the shape and the limit block we are checking.
+ *@desc: Checks, if there is a shape block above the upper limit block of the column we are looking at, that could make a collision
+ * 		 when we add the unremovable lines.
  *
- ***********************************************************************************************************/
+ *@param: *ShapeAbove 				- Stores if there is a shape that will collide with any block when we add the lines
+ *@param: row 						- Row of the block we are checking
+ *@param: column 					- Column of the block we are checking
+ *@param: *ptrShape 				- Shape that is currently falling
+ *@param: NumOfLines 				- Number of unremovable lines that will be added to the board
+ *@param: *gapBtwShapeAndTopBlock 	- Gap between the block we are checking and the lower block of the shape that is falling
+ *
+ *@return:							- void
+ *
+ *-------------------------------------------*/
 void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape, int NumOfLines, int *gapBtwShapeAndTopBlock){
 	int tempGap;
 
@@ -1029,10 +863,10 @@ void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape,
 
 			int pieceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,i1,j1);
 
-			int offset=0;								//If we are checking the base block (value = 0), we also have to check
-			if(BoardMatrix[row][column]==0) offset=-1;  //the current block, not only the above ones
+			int offset=0;								//If we are checking the last block (value = 0), we also need to look at
+			if(BoardMatrix[row][column]==0) offset=-1;  //the current block (the empty one), not only the above ones.
 
-			for(int w= 1 + offset; w<=NumOfLines + offset; w++){			//Checks the sensible positions that may cause overlapping
+			for(int w= 1 + offset; w<=NumOfLines + offset; w++){			//Checks the sensible positions that may cause overlapping in that column
 				if((pieceOfShape!=0) && (i2 == column - w) && (j2== row)){  //from the first above block (or 0) to NumOfLines (or NumOfLines - 1).
 					*ShapeAbove = true;
 
@@ -1045,31 +879,33 @@ void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape,
 	}
 }
 
-/***********************************************************************************************************
+/*-------------------------------------------
  *
- * Checks, column by column, if there is a shape block just above the upper base block of the column
- * so it can cause an overlapping while introducing the unremovable lines.
- * If the shape is above and may cause an overlapping, then it is moved the number of unremovable lines positions up
- * minus the gap between the lower block of the shape and the upper block of the base. Then the unremovable line is introduced.
+ *@desc: Add the unremovable lines that were sended by the other player
  *
- ***********************************************************************************************************/
-void AddLine_idea(int NumOfLines, shape_t * ptrShape){
-	boolean_t ShapeAbove = false; //True if there is a block of a shape over matrix block we are checking
+ *@param: NumOfLines	- Number of unremovable lines that will be added to the board
+ *@param: *ptrShape		- Current shape that is falling
+ *
+ *@return:				- void
+ *-------------------------------------------*/
+void AddLine(int NumOfLines, shape_t * ptrShape){
+	boolean_t ShapeAbove = false; //True if there is a block of a shape over matrix block we are checking.
 	boolean_t ColumnChecked;
-	int gapBtwShapeAndTopBlock = 20; //We initialize the gap with a high number (it will never reach this value)
+	int gapBtwShapeAndTopBlock = 20; //We initialize the gap with a high number (it will never reach this value).
 
-	//Check all the rows of one column until it founds the first non-zero block or the matrix base (limit blocks)
+	//Check all the rows of one column until it founds the first non-zero block or the matrix base (limit blocks).
 	for(int j=0; j< BOARD_WIDTH_IN_BLOCKS; j++){
 		ColumnChecked = false;
 		for(int i=0; i<BOARD_HEIGHT_IN_BLOCKS; i++){
 			if((ColumnChecked == false) && ((BoardMatrix[j][i]!=0) || ((BoardMatrix[j][i]==0) && (i==BOARD_HEIGHT_IN_BLOCKS-1)))){
+				//Checks the above positions of the column whether there will be a collision while adding the lines.
 				CheckAbove(&ShapeAbove, j, i, ptrShape, NumOfLines, &gapBtwShapeAndTopBlock);
-				ColumnChecked=true;  //Only checks for the first non-zero block or the matrix base
+				ColumnChecked=true;
 			}
 		}
 	}
-	if(ShapeAbove==true){ //If one of the limit non-zero blocks has a shape block just above it, we move the shape up
-		//Move the shape up the number of unremovable lines added minus the gap between the lower block of the shape and the limit block.
+	if(ShapeAbove==true){ //If one of the limit non-zero blocks has a shape block just above it, we move the shape up.
+		//Move the shape up the number of unremovable lines minus the gap between the lower block of the shape and the limit block.
 		ptrShape->y = ptrShape->y - NumOfLines + gapBtwShapeAndTopBlock;
 		ShapeAbove=false;
 		gapBtwShapeAndTopBlock = 20; //We reset the gap with a high number

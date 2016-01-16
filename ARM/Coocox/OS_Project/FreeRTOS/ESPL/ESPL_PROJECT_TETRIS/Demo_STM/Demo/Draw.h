@@ -27,15 +27,13 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2pl
 		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state);
 void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon);//(const joystickselection_t * joystickselection );
 
-void AddLine(int NumOfLines, shape_t * ptrShape);
 void InitializeBoardMatrix();
 boolean_t IsMoveMentPossible (shape_t * ptrShape);
 boolean_t isGameOver();
 void StoreShape (shape_t * ptrShape);
 int DeletePossibleLines();
 
-//IDEA
-void AddLine_idea(int NumOfLines, shape_t * ptrShape);
+void AddLine(int NumOfLines, shape_t * ptrShape);
 void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape, int NumOfLines, int *gapBtwShapeAndTopBlock);
 
 

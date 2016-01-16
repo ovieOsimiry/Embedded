@@ -36,7 +36,6 @@ JoyStickCord_t JoyStickVal = {0,0};
 QueueHandle_t DrawQueue;
 
 /*--------------Please put all function prototypes used only within this file here----*/
-void sendLine(struct coord coord_1, struct coord coord_2);
 void ResetGamePlay();
 void CreateNewPiece();
 void VApplicationIdleHook();
@@ -59,7 +58,6 @@ int gTotalNumberOfLinesCompleted = 0;
 int gGameScore = 0;
 int gDifficultyLevel;
 int gReceiving = 0;
-int gSending = 0;
 int gHighestScore = 0;
 int g2playerGameNoOfRoundsWon = 0;
 int g2playerGameNoOfRounds = 0;
@@ -91,7 +89,6 @@ uint32_t gDifficultyCheckPoint;
 
 /*------------------------------Semaphores/Mutexs-------------------------------------*/
 
-//SemaphoreHandle_t gSynchroSemaphore;
 static TaskHandle_t gTaskSynchroNotification = NULL;
 
 /*---------------------------------------Timers---------------------------------------*/
@@ -411,11 +408,6 @@ static void GamePlay()
 
 /*-------------------------------------------------------------------------*/
 
-/*----------------------------------------------Remove after Debugging----------------------------------------------------*/
-		int testingAddLines = 0;
-/*--------------------------------------------------------------------------------------------------------------*/
-
-
 	while(1){
 				//Make the loop wait until the task notification from the SystemState task is released
 				ulTaskNotifyTake( pdTRUE, portMAX_DELAY);
@@ -464,18 +456,15 @@ static void GamePlay()
 							switch(gReceiving)
 							{
 								case 2:
-									//AddLine(1,ptrShape);
-									AddLine_idea(1,ptrShape);
+									AddLine(1,ptrShape);
 									gReceiving = 0;
 								break;
 								case 3:
-									//AddLine(2,ptrShape);
-									AddLine_idea(2,ptrShape);
+									AddLine(2,ptrShape);
 									gReceiving = 0;
 								break;
 								case 4:
-									//AddLine(4,ptrShape);
-									AddLine_idea(4,ptrShape);
+									AddLine(4,ptrShape);
 									gReceiving = 0;
 								break;
 							}
@@ -630,22 +619,7 @@ static void GamePlay()
 			{
 				ResetGamePlay();
 				tempNoOfLines = 0;//reset temporary local variables within the task.
-
-				/*-------Remove after debugging-----------*/
-				testingAddLines = 0;
-				gSending = 0;
 			}
-
-
-//			if(testingAddLines == 2000)
-//			{
-//				testingAddLines = 0;
-//				AddLine(1,_shape);
-//			}
-//			else if(getState()==3)
-//			{
-//				++testingAddLines;
-//			}
 		}
 }
 
@@ -683,8 +657,6 @@ static void drawTask() {
 			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode, &gHighestScore);
 		}
 		else if(getState()==stateGame1Player || getState()==stateGame2Player) {
-			//DrawShapeWithHandle(&gCurrentShape);
-			//DrawGameFrame(mNextShape,mNextRotation,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,gReceiving,gSending);
 			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,g2playerGameNoOfRoundsWon,
 					g2playerGameNoOfRounds, gPlayer2NumOfLinesCompleted,getState());
 			DrawShapeWithHandle(&gCurrentShape);
@@ -725,7 +697,7 @@ void ResetGamePlay()
 /* -------------------------------------------
  *@desc Calculates the score of the game according to
  *@desc the lines made and the level of the game.
- *@param level - currently level of the game
+ *@param level - current level of the game
  *@param lines - lines made
  *@return int - Score reached with those lines and level.
  * ------------------------------------------- */
@@ -748,9 +720,14 @@ int calculateScore(int level, int lines)
 
 	}
 }
-/*External interrupt handler for Button E*/
 
-
+/* -------------------------------------------
+ *@desc: External interrupt handler for Button E. Pauses the game.
+ *
+ *@param:	- void
+ *
+ *@return:	- void
+ * ------------------------------------------- */
 void EXTI0_IRQHandler(void)//Button E interrupt handler
 {
   if(EXTI_GetITStatus(EXTI_Line0) != RESET)
@@ -759,12 +736,12 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 	  if(debounce == 0)
 	  {
 		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
-			  /* Button E will Reset all counters */
+			  /* Button E pauses the game */
 			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
-				  if(getState()!=stateMainMenu || getState()!=stateGameOver)
+				  if(getState()!=stateMainMenu || getState()!=stateGameOver) //Only pauses the game if we are in a gameplay state.
 				  {
 					  setState(stateGamePaused);
-				  	  debounce = 1;
+				  	  debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
 				  }
 			  }
 		  }
@@ -774,7 +751,13 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
   }
 }
 
-/*External interrupt handler for Button D*/
+/* -------------------------------------------
+ *@desc: External interrupt handler for Button D. Button D does nothing.
+ *
+ *@param:	- void
+ *
+ *@return:	- void
+ * ------------------------------------------- */
 void EXTI2_IRQHandler(void)//Button D interrupt handler
 {
 	if(EXTI_GetITStatus(EXTI_Line2) != RESET)
@@ -788,7 +771,13 @@ void EXTI2_IRQHandler(void)//Button D interrupt handler
 	  }
 }
 
-/*External interrupt handler for Button B*/
+/* -------------------------------------------
+ *@desc: External interrupt handler for Button B. Selects the option on which the pointer is.
+ *
+ *@param:	- void
+ *
+ *@return:	- void
+ * ------------------------------------------- */
 void EXTI4_IRQHandler(void)//Button B interrupt handler
 {
 
@@ -800,7 +789,7 @@ void EXTI4_IRQHandler(void)//Button B interrupt handler
 			if (GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)==0)
 			{
 				gSelectButtonPressed = 1;
-				debounce = 1;
+				debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
 			}
 			/* Clear the EXTI line 0 pending bit */
 		}
@@ -808,37 +797,41 @@ void EXTI4_IRQHandler(void)//Button B interrupt handler
 	EXTI_ClearITPendingBit(EXTI_Line4);
 }
 
-/*External interrupt handler for Button A and Button C*/
+/* -------------------------------------------
+ *@desc: External interrupt handler for Button A and C. Button C does nothing. Button A changes the orientation of the shape
+ *		 while playing.
+ *
+ *@param:	- void
+ *
+ *@return:	- void
+ * ------------------------------------------- */
 void EXTI9_5_IRQHandler(void)//Buttons C and A interrupt handler
 {
 	timerStart(); //Reset the debouncing timer
 
 	if(debounce == 0){
-		if(EXTI_GetITStatus(EXTI_Line5) != RESET)
+		if(EXTI_GetITStatus(EXTI_Line5) != RESET) //Button C pressed
 		{
 			if (GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C)==0)
 			debounce = 1;
-			//EXTI_ClearITPendingBit(EXTI_Line5);
 		}
-		else if(EXTI_GetITStatus(EXTI_Line6) != RESET)
+		else if(EXTI_GetITStatus(EXTI_Line6) != RESET) //Button A pressed
 		{
-			//if (GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)==0)
-
 			shape_t shapeTemp = gCurrentShape;
 			boolean_t rotatePossible = true;
 			if(shapeTemp.shapeOrientation==3){
-				shapeTemp.shapeOrientation = 0;// if we have reached the max value roll it back to zero.
+				shapeTemp.shapeOrientation = 0;  //If we have reached the max value roll it back to zero.
 			}
 			else {
-				shapeTemp.shapeOrientation = shapeTemp.shapeOrientation + 1;	//increase the rotation.
+				shapeTemp.shapeOrientation = shapeTemp.shapeOrientation + 1;	//Increase the rotation.
 			}
-			rotatePossible = IsMoveMentPossible (&shapeTemp);
-
-			if(rotatePossible==true)//if rotation is possible then assign it to the new rotation
+			rotatePossible = IsMoveMentPossible (&shapeTemp); //Checks if the rotation is possible, it may collide with the limits
+															  //or with other blocks.
+			if(rotatePossible==true)  //If rotation is possible then assign it to the new rotation.
 			{
 				gCurrentShape.shapeOrientation = shapeTemp.shapeOrientation;
 			}
-			debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires
+			debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
 		}
 	}
 	EXTI_ClearITPendingBit(EXTI_Line6);
@@ -915,7 +908,13 @@ static void checkJoystick() {
 	}
 
 /*************************BUTTON DEBOUNCING TIMER FUNCTIONS**************************************/
-//Function executed when the debounce timer expires
+/*-------------------------------------------
+ *@desc: Function executed when the debouncing timer expires. Resets the debounce variable and stops the timer.
+ *
+ *@param: pxTimer	- Timer handler
+ *
+ *@return:			-void
+ *-------------------------------------------*/
 void vTimerCallback(TimerHandle_t pxTimer){
 	//Allow the next button interruption
 	debounce = 0;
@@ -924,7 +923,13 @@ void vTimerCallback(TimerHandle_t pxTimer){
 	xTimerStop(pxTimer, 0);
 }
 
-//Debounce timer setup
+/*-------------------------------------------
+ *@desc: Sets up the debouncing timer
+ *
+ *@param:	-void
+ *
+ *@return:	-void
+ *-------------------------------------------*/
 void timerInit(){
 	//Software timer to debounce the button
 	xTimers = xTimerCreate("timer", 200 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);  //It overflows in 10ms and then it calls the vTimerCallback
@@ -933,7 +938,14 @@ void timerInit(){
 	xTimerStop(xTimers, 0);
 
 }
-//Function that reset the debounce timer
+
+/*-------------------------------------------
+ *@desc: Resets the debouncing timer
+ *
+ *@param:	-void
+ *
+ *@return:	-void
+ *-------------------------------------------*/
 void timerStart(){
 	//Reset the timer
 	xTimerReset(xTimers, 0);
@@ -1036,28 +1048,6 @@ static void ReceiveValue()
 		}
 	}
 }
-
-/**
- * Example function to send data over UART
- */
-void sendLine(struct coord coord_1, struct coord coord_2) {
-	char checksum;
-	// Generate simple error detection checksum
-	checksum = coord_1.x ^ coord_1.y ^ coord_2.x ^ coord_2.y;
-	// Structure of one packet:
-	//  Start byte
-	//	4 * line byte
-	//	checksum (all xor)
-	//	End byte
-	UART_SendData((uint8_t) ESPL_StartByte);
-	UART_SendData((uint8_t) coord_1.x);
-	UART_SendData((uint8_t) coord_1.y);
-	UART_SendData((uint8_t) coord_2.x);
-	UART_SendData((uint8_t) coord_2.y);
-	UART_SendData((uint8_t) checksum);
-	UART_SendData((uint8_t) ESPL_StopByte);
-}
-
 
 /**
  * Idle hook, definition is needed for FreeRTOS to function.
