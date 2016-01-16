@@ -34,5 +34,10 @@ boolean_t isGameOver();
 void StoreShape (shape_t * ptrShape);
 int DeletePossibleLines();
 
+//IDEA
+void AddLine_idea(int NumOfLines, shape_t * ptrShape);
+void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape, int NumOfLines, int *gapBtwShapeAndTopBlock);
+
+
 
 #endif

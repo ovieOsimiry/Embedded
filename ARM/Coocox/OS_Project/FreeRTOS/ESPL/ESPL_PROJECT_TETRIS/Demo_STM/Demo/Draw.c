@@ -1011,6 +1011,89 @@ void AddLine(int NumOfLines, shape_t * ptrShape)
 	/*--------------------------------------------------------------------------------------------*/
 }
 
+/***********************************************************************************************************
+ *
+ * Checks, if there is a shape block just above the upper limit block of the column
+ * If the shape is just above, it changes the value of ShapeAbove to true so the addLine function knows that
+ * the shape has to be moved 1 position up.
+ * It also stores the value of the gap between the lower block of the falling shape and the limit base block,
+ * so when we move up the shape, we only move it the number of unremovable lines added minus the gap that
+ * were between the lower block of the shape and the limit block we are checking.
+ *
+ ***********************************************************************************************************/
+void CheckAbove(boolean_t * ShapeAbove, int row, int column, shape_t * ptrShape, int NumOfLines, int *gapBtwShapeAndTopBlock){
+	int tempGap;
+
+	for(int i1 = 0, i2 = ptrShape->y; i1<SHAPE_MATRIX_DIMENSION; i1++, i2++){ //Go over all the positions of the shape matrix
+		for(int j1 = 0, j2 = ptrShape->x; j1<SHAPE_MATRIX_DIMENSION; j1++, j2++){
+
+			int pieceOfShape = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,i1,j1);
+
+			int offset=0;								//If we are checking the base block (value = 0), we also have to check
+			if(BoardMatrix[row][column]==0) offset=-1;  //the current block, not only the above ones
+
+			for(int w= 1 + offset; w<=NumOfLines + offset; w++){			//Checks the sensible positions that may cause overlapping
+				if((pieceOfShape!=0) && (i2 == column - w) && (j2== row)){  //from the first above block (or 0) to NumOfLines (or NumOfLines - 1).
+					*ShapeAbove = true;
+
+					if(w==0) tempGap=0; //Measures the gap between the lower block of the shape and the block of the base we are checking.
+					else tempGap=w-1;
+					if(tempGap<*gapBtwShapeAndTopBlock) *gapBtwShapeAndTopBlock = tempGap;
+				}
+			}
+		}
+	}
+}
+
+/***********************************************************************************************************
+ *
+ * Checks, column by column, if there is a shape block just above the upper base block of the column
+ * so it can cause an overlapping while introducing the unremovable lines.
+ * If the shape is above and may cause an overlapping, then it is moved the number of unremovable lines positions up
+ * minus the gap between the lower block of the shape and the upper block of the base. Then the unremovable line is introduced.
+ *
+ ***********************************************************************************************************/
+void AddLine_idea(int NumOfLines, shape_t * ptrShape){
+	boolean_t ShapeAbove = false; //True if there is a block of a shape over matrix block we are checking
+	boolean_t ColumnChecked;
+	int gapBtwShapeAndTopBlock = 20; //We initialize the gap with a high number (it will never reach this value)
+
+	//Check all the rows of one column until it founds the first non-zero block or the matrix base (limit blocks)
+	for(int j=0; j< BOARD_WIDTH_IN_BLOCKS; j++){
+		ColumnChecked = false;
+		for(int i=0; i<BOARD_HEIGHT_IN_BLOCKS; i++){
+			if((ColumnChecked == false) && ((BoardMatrix[j][i]!=0) || ((BoardMatrix[j][i]==0) && (i==BOARD_HEIGHT_IN_BLOCKS-1)))){
+				CheckAbove(&ShapeAbove, j, i, ptrShape, NumOfLines, &gapBtwShapeAndTopBlock);
+				ColumnChecked=true;  //Only checks for the first non-zero block or the matrix base
+			}
+		}
+	}
+	if(ShapeAbove==true){ //If one of the limit non-zero blocks has a shape block just above it, we move the shape up
+		//Move the shape up the number of unremovable lines added minus the gap between the lower block of the shape and the limit block.
+		ptrShape->y = ptrShape->y - NumOfLines + gapBtwShapeAndTopBlock;
+		ShapeAbove=false;
+		gapBtwShapeAndTopBlock = 20; //We reset the gap with a high number
+	}
+
+
+	for(int v = 0; v<NumOfLines; v++){ //Move "NumOfLines" times all the lines up and add "NumOfLines" lines of unremovable blocks
+		//=====================MOVE MATRIX LINES UP===========================
+		for(int i=0; i<BOARD_HEIGHT_IN_BLOCKS - 1; i++){
+			for(int j=0; j<BOARD_WIDTH_IN_BLOCKS; j++){
+				BoardMatrix[j][i] = BoardMatrix[j][i+1];
+			}
+		}
+		//====================================================================
+
+		//====================INTRODUCE UNREMOVABLE LINES=====================
+		for(int j=0; j<BOARD_WIDTH_IN_BLOCKS; j++){
+			BoardMatrix[j][BOARD_HEIGHT_IN_BLOCKS-1] = 5;
+		}
+		//====================================================================
+	}
+}
+
+
 /* -------------------------------------------
  *@desc Checks and deletes the lines that are already filled with blocks
  *@param void parameters

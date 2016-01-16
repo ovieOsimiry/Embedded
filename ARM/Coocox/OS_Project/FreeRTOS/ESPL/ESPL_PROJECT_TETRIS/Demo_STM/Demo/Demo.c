@@ -77,10 +77,10 @@ boolean_t gSend2PlayerRequestFlag = true;
 
 playermode_t gPlayerMode = onePlayerMode;
 /*---------------------Game Play global variables used in GamePlay task-------------*/
-#define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  5;
+#define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  15;
 const uint8_t TWO_PLAYER_REQUEST_VALUE = 0xeb;
 #define TWO_PLAYER_MODE_GAME_OVER  0xab
-#define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 5
+#define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 30
 //const int SUBSEQUENT_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE = 10;
 uint32_t gDifficultyCheckPoint;
 
@@ -464,15 +464,18 @@ static void GamePlay()
 							switch(gReceiving)
 							{
 								case 2:
-									AddLine(1,ptrShape);
+									//AddLine(1,ptrShape);
+									AddLine_idea(1,ptrShape);
 									gReceiving = 0;
 								break;
 								case 3:
-									AddLine(2,ptrShape);
+									//AddLine(2,ptrShape);
+									AddLine_idea(2,ptrShape);
 									gReceiving = 0;
 								break;
 								case 4:
-									AddLine(4,ptrShape);
+									//AddLine(4,ptrShape);
+									AddLine_idea(4,ptrShape);
 									gReceiving = 0;
 								break;
 							}
