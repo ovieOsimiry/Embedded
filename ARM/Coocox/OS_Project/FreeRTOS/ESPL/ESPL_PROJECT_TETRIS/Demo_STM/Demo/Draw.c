@@ -4,7 +4,7 @@
  * http://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
  * writing to the display and processing user inputs.
  *
- * @author: Natalia, Edu and Ovie.
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
  *
  */
 

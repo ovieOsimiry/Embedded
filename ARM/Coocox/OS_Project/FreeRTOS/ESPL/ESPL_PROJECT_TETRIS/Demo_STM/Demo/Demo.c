@@ -3,7 +3,7 @@
  * It implements simple sample functions for the usage of UART,
  * writing to the display and processing user inputs.
  *
- * @author: Jonathan Müller-Boruttau, Nadja Peters nadja.peters@tum.de (RCS, TUM)
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
  *
  */
 

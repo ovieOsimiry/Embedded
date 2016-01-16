@@ -1,3 +1,10 @@
+/*
+ * This file holds function definitions that set and retrieve the possible states
+ *
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
+ */
+
+
 #include "SystemState.h"
 
 static systemState_t currentState;
@@ -8,7 +15,7 @@ static systemState_t currentState;
  *@return void parameters
  * ------------------------------------------- */
 void startState(){
-	currentState = stateMainMenu;//1;
+	currentState = stateMainMenu;
 }
 
 /* -------------------------------------------

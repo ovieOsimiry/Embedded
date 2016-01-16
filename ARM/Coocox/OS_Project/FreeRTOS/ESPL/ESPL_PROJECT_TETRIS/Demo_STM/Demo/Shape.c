@@ -1,21 +1,30 @@
+/*
+ *
+ * This file defines matrices for all shapes, structures for holding and representing all shapes as well
+ * as a function for retrieving pieces of elements for a given shape.
+ *
+ * We gained very good inspiration from:
+ * http://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
+ *
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
+ */
+
 #include "Shape.h"
 
 
-/**
- *
- * Here we define each shape as an array of characters
- * Each array contains the possible position of the shape when it is rotated.
- * We gained very good inspiration on how to completely implement the shapes
- * from: http://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
- *
- */
+/*-------------------------------Array declaration for all 7 TETRIS shapes---------------------------------------*/
+/* Each shape pattern can have 4 possible orientation and each orientation is represented with a 5 by 5 matrix.
+ * This leads to an array with a 3 dimensions [4][3][3]
+ * [4] - dimension
+ * [5] - y coordinate
+ * [5] - x coordinate
+ *----------------------------------------------------------------------------------------------------------------*/
 
+static const char Array_Square [4][5][5];		//Structure array that defines the shape of a square
 
-static const char Array_Square [4][5][5]; //Structure array that defines the shape of a square
+static const char Array_I [4][5][5];			//Structure array that defines the I shape.
 
-static const char Array_I [4][5][5];		//Structure array that defines the I shape.
-
-static const char Array_L [4][5][5];		//Structure array that defines the L shape.
+static const char Array_L [4][5][5];			//Structure array that defines the L shape.
 
 static const char Array_L_Mirrored [4][5][5];	//Structure array that defines the L reversed shape
 
@@ -25,19 +34,32 @@ static const char Array_N_Mirrored [4][5][5];	//Structure array that defines the
 
 static const char Array_T [4][5][5];			//Structure array that defines the T shape
 
-/*-----------------------------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------------------------------------------*/
 
-------------------------------------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------------------------------------------
+* 	@desc:	This function is used by the shape struct function pointer (*GetAPeiceFromShape)
+* 			For retrieving a piece from the shape matrix that *arr points to*
+*
+* 	@param: *arr 				- Pointer to a 3 Dimensional array [4][3][3] that holds the pattern of the shape
+* 	@param: x					- X coordinate of shape
+*	@param:	y					- Y coordinate of shape
+* 	@param:	shapeOrientation	- Orientation of shape
+*
+* 	@return:					- Returns an element of type 'char' from the shape array
+*--------------------------------------------------------------------------------------------------------------*/
 
 char ReturnAnElementFrom3DArray(const char *arr, char shapeOrientation, short Y, short X) {
 	return *(arr + (shapeOrientation*25) + (Y*5) + X);
 }
 
 
-//char ReturnAnElementFrom3DArray(shape_t * ptrShape, short X, short Y)
-//{
-//	return *(ptrShape->pArr + (ptrShape->shapeOrientation*25) + (X*5) + Y);
-//}
+/*------------Declaration and initialisation of Shape Structures for-------------------------------*/
+/*---------------------------------------------------------------------------------------------------------------------
+ * @Desc:	Each shape can have 4 possible orientations, and each orientation of a shape is unique due
+ * 			to the different initialisation data such as shape matrix etc. There are 7 shapes in total so this give a
+ * 			total of 28 (7 * 4) structures initialised with 7 shapes and their 4 different orientations.
+----------------------------------------------------------------------------------------------------------------------*/
 
 shape_t shapeN0 = {&Array_N[0][0][0],3,-3,0,ReturnAnElementFrom3DArray};
 shape_t shapeN1 = {&Array_N[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
@@ -75,7 +97,16 @@ shape_t shapeT1 = {&Array_T[0][0][0],3,-3,1,ReturnAnElementFrom3DArray};
 shape_t shapeT2 = {&Array_T[0][0][0],3,-3,2,ReturnAnElementFrom3DArray};
 shape_t shapeT3 = {&Array_T[0][0][0],3,-2,3,ReturnAnElementFrom3DArray};
 
+/*----------------------------------------------------------------------------------------------------------------------------------------*/
 
+
+
+/*------------------------------------------------------------------------------------------------------------------------------------------------
+* 	@Desc: This function returns an initialised shape struct from 28 (4(orientation) * 7(shapes)) possible initialisation.
+*
+* 	@Params: randomNumber 	-	A random number between 0 and 27.
+* 	@return:				- 	Returns an initialised shape_t struct from 28 possible configurations (7(shapes)*4(orientation)).
+*------------------------------------------------------------------------------------------------------------------------------------------------*/
 shape_t GetShape(char randomNumber)
 {
 	shape_t * selectedShape;
@@ -177,6 +208,11 @@ shape_t GetShape(char randomNumber)
 }
 
 
+
+
+/*-----------------------------------------------------------------------------------------------------------------
+ * 									Initialisation of Shape matrices
+ * --------------------------------------------------------------------------------------------------------------*/
 static const char Array_N [4][5][5] =
 
   {
