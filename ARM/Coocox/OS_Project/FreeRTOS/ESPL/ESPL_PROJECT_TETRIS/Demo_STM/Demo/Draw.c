@@ -476,9 +476,12 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 /* -------------------------------------------
  *@desc Draws the game over screen
  *@param gSelectionArrowPosition - Possible selection according to the joystick
+ *@param gWhoWon - displays who won the game ( in case of two player mode)
+ *@param gWhoWon - 0 = 1 player mode; 1 = You won (2players); 2= your opponent won (2players)
  *@return void function
  * ------------------------------------------- */
-void DrawGameOver(const uint8_t * gSelectionArrowPosition)
+
+void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const joystickselection_t * joystickselection  )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -585,6 +588,17 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition)
 
 	sprintf(str, "Main menu");
 	gdispDrawString(120, 140, str, font1, White);
+
+	if(gWhoWon == 1)
+	{
+		sprintf(str, "You won!");
+		gdispDrawString(120, 70, str, font1, Lime);
+	}
+	if(gWhoWon == 2)
+	{
+		sprintf(str, "You lost!");
+		gdispDrawString(120, 70, str, font1, Lime);
+	}
 
 	gdispCloseFont(font1);
 	font1 = gdispOpenFont("UI1");

@@ -25,7 +25,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 void DrawShapeWithHandle(shape_t * ptrShape);
 void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2playerGameNoOfRoundsWon,
 		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state);
-void DrawGameOver(const uint8_t * gSelectionArrowPosition);//(const joystickselection_t * joystickselection );
+void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon);//(const joystickselection_t * joystickselection );
 
 void AddLine(int NumOfLines, shape_t * ptrShape);
 void InitializeBoardMatrix();

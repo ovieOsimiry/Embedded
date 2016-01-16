@@ -63,6 +63,7 @@ int gSending = 0;
 int gHighestScore = 0;
 int g2playerGameNoOfRoundsWon = 0;
 int g2playerGameNoOfRounds = 0;
+int gWhoWon = 0;
 uint8_t gSelectionArrowPosition = 0;
 uint8_t gPlayer1NumOfLinesCompleted = 0;
 uint8_t gPlayer2NumOfLinesCompleted = 0;
@@ -437,6 +438,7 @@ static void GamePlay()
 							++g2playerGameNoOfRounds;
 							if(g2playerGameNoOfRoundsWon==4){
 								//setState(stateYouWon2playerGame);
+								gWhoWon = 1;
 								setState(stateGameOver);
 								g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 								g2playerGameNoOfRounds = 0;
@@ -496,6 +498,7 @@ static void GamePlay()
 									++g2playerGameNoOfRounds;
 									if(g2playerGameNoOfRoundsWon == 4){
 										//setState(stateYouWon2playerGame);
+										gWhoWon = 1;
 										setState(stateGameOver);
 										g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 										g2playerGameNoOfRounds = 0;
@@ -519,6 +522,7 @@ static void GamePlay()
 								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon) == 4)
 								{
 									//setState(stateYouWon2playerGame);
+									gWhoWon = 2;
 									setState(stateGameOver);
 									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 									g2playerGameNoOfRounds = 0;
@@ -595,6 +599,7 @@ static void GamePlay()
 								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon)  == 4)
 								{
 									//setState(stateYouWon2playerGame);
+									gWhoWon = 2;
 									setState(stateGameOver);
 									g2playerGameNoOfRoundsWon = 0; //reset variable for next time
 									g2playerGameNoOfRounds = 0;
@@ -612,6 +617,7 @@ static void GamePlay()
 							}
 							else
 							{
+								gWhoWon = 0;
 								setState(stateGameOver);
 							}
 						 }
@@ -685,7 +691,7 @@ static void drawTask() {
 		}
 		else if(getState()==stateGameOver)
 		{
-			DrawGameOver(&gSelectionArrowPosition);//(&gjoyStickLastSelection);
+			DrawGameOver(&gSelectionArrowPosition,gWhoWon);//(&gjoyStickLastSelection);
 		}
 
 		// Wait for display to stop writing
