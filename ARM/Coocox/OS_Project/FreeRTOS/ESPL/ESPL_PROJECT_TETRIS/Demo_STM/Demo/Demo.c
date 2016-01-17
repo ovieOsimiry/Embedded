@@ -42,6 +42,8 @@ void VApplicationIdleHook();
 void sendValue(uint32_t  anIntegerValue);
 void InitializeNextShape();
 int calculateScore(int level, int lines);
+/*----------------------------------------------------------------------*/
+
 static void checkJoystick();
 static void drawTask();
 static void GamePlay();
