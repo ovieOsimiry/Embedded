@@ -1,7 +1,7 @@
 /**
  * Function definitions for the main project file.
  *
- * @author: Jonathan Müller-Boruttau, Nadja Peters nadja.peters@tum.de (RCS, TUM)
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
  */
 
 #ifndef Demo_INCLUDED

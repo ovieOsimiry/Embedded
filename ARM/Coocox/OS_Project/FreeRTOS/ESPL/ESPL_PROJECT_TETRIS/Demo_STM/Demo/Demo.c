@@ -39,10 +39,8 @@ QueueHandle_t DrawQueue;
 void ResetGamePlay();
 void CreateNewPiece();
 void VApplicationIdleHook();
-//void sendValue(uint8_t * aByteValue);
 void sendValue(uint32_t  anIntegerValue);
 int calculateScore(int level, int lines);
-//static void uartReceive();
 static void checkJoystick();
 static void drawTask();
 static void GamePlay();
@@ -133,10 +131,11 @@ int main() {
 
 
 /* -------------------------------------------
- *@desc Assign the next shape to the current one, creates
- *@desc a new shape and stores it in gNextShape
- *@param void parameters
- *@return void parameters
+ *@desc: Assign the next shape to the current one, creates a new shape and stores it in gNextShape.
+ *
+ *@param:	- void parameters
+ *
+ *@return:	- void
  * ------------------------------------------- */
 void CreateNewShape()
 {
@@ -361,7 +360,7 @@ static void SystemState()
 					break;
 			}
 
-			vTaskDelay(10); //Without task notification synchronization the delay would be 100
+			vTaskDelay(10);
 	}
 }
 
@@ -606,11 +605,12 @@ static void GamePlay()
 }
 
 /* -------------------------------------------
- *@desc Draws the screen depending on the position of the shapes,
- *@desc state of the game and use of the buttons and joystick;
- *@desc making use of the functions in the Draw.c file
- *@param void parameters
- *@return void parameters
+ *@desc: Draws the screen depending on the position of the shapes, state of the game and use of the buttons and joystick;
+ *	 	 making use of the functions in the Draw.c file.
+ *
+ *@param:	- void parameters
+ *
+ *@return:	- void
  * ------------------------------------------- */
 static void drawTask() {
 
@@ -657,27 +657,29 @@ static void drawTask() {
 }
 
 /* -------------------------------------------
- *@desc Resets the global variables of the game to zero and
- *@desc initializes the functions for a new game
- *@param void parameters
- *@return void parameters
+ *@desc: Resets the global variables of the game to zero and initializes the functions for a new game.
+ *
+ *@param:	- void parameters
+ *
+ *@return:	- void
  * ------------------------------------------- */
 void ResetGamePlay()
 {
 	gGameScore = 0;
 	gDifficultyLevel = 0;
-	gDifficultyCheckPoint = INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;//initialise the difficulty level.
+	gDifficultyCheckPoint = INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE; //Initialize the difficulty level.
 	gTotalNumberOfLinesCompleted = 0;
 	InitializeBoardMatrix();
 	CreateNewShape();
 }
 
 /* -------------------------------------------
- *@desc Calculates the score of the game according to
- *@desc the lines made and the level of the game.
- *@param level - current level of the game
- *@param lines - lines made
- *@return int - Score reached with those lines and level.
+ *@desc: Calculates the score of the game according to the lines made and the level of the game.
+ *
+ *@param: level - current level of the game
+ *@param: lines - lines made
+ *
+ *@return: int 	- Score reached with those lines and level.
  * ------------------------------------------- */
 int calculateScore(int level, int lines)
 {
@@ -750,9 +752,9 @@ void EXTI4_IRQHandler(void)//Button B interrupt handler
 				gSelectButtonPressed = 1;
 				debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
 			}
-			/* Clear the EXTI line 0 pending bit */
 		}
 	}
+	/* Clear the EXTI line 4 pending bit */
 	EXTI_ClearITPendingBit(EXTI_Line4);
 }
 
@@ -793,14 +795,23 @@ void EXTI9_5_IRQHandler(void)//Buttons C and A interrupt handler
 			debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
 		}
 	}
+	/* Clear the EXTI lines 5 and 6 pending bit */
 	EXTI_ClearITPendingBit(EXTI_Line6);
 	EXTI_ClearITPendingBit(EXTI_Line5);
 }
 
 
-/**
- * This task polls the joystick value every 20 ticks
- */
+/*-------------------------------------------------------------------------------------------------------
+ *@desc: This task polls the joystick value every 20 ticks. For the horizontal shifting we first have to reach the value of
+ *		 HORIZONTAL_CONTROL_MOVE_SPEED to increase the x position of the shape 1 time. This allows us to control the horizontal
+ *		 shifting speed of the shape. For the vertical shifting we just refresh the variable gjoyStickSelection which will be used
+ *		 in other tasks, like GamePlay and SystemState, to accelerate the vertical falling of the shape and to choose between options
+ *		 respectively.
+ *
+ *@param:	- void
+ *
+ *@return:	- void
+ * -----------------------------------------------------------------------------------------------------*/
 static void checkJoystick() {
 		TickType_t xLastWakeTime;
 		xLastWakeTime = xTaskGetTickCount();
@@ -816,28 +827,28 @@ static void checkJoystick() {
 			joystick_now.x = (uint8_t) (ADC_GetConversionValue(ESPL_ADC_Joystick_2) >> 4);
 			joystick_now.y = (uint8_t) 255 - (ADC_GetConversionValue(ESPL_ADC_Joystick_1) >> 4);
 
-			shapeTemp = *ptrShape;//make a temporary copy of the shape
+			shapeTemp = *ptrShape;	//Make a temporary copy of the shape.
 			if(joystick_now.x > 150)
 			{
 				if(rightMove==HORIZONTAL_CONTROL_MOVE_SPEED)
 				{
 					rightMove = 0;
-					shapeTemp.x = shapeTemp.x + 1;//if we have not reached the max value the increase.
-				movePossible = IsMoveMentPossible (&shapeTemp);
+					shapeTemp.x = shapeTemp.x + 1;				//If we have not reached the max value then increase.
+				movePossible = IsMoveMentPossible (&shapeTemp);	//Check if the shape doesn't go further the lateral limits.
 				if(movePossible==true)
 					ptrShape->x = shapeTemp.x;
 				}
 				else
 					++rightMove;
 			}
+
 			else if((joystick_now.x < 120))
 			{
-
 				if(leftMove==HORIZONTAL_CONTROL_MOVE_SPEED)
 				{
 				leftMove = 0;
-				shapeTemp.x = shapeTemp.x - 1;//lastX = lastX - 1;//if we have not reached the min value then decrease.
-				movePossible = IsMoveMentPossible (&shapeTemp);
+				shapeTemp.x = shapeTemp.x - 1;					//If we have not reached the min value then decrease.
+				movePossible = IsMoveMentPossible (&shapeTemp);	//Check if the shape doesn't go further the lateral limits.
 				if(movePossible==true)
 					ptrShape->x = shapeTemp.x;
 				}else
@@ -846,20 +857,20 @@ static void checkJoystick() {
 				}
 			}
 
-			if(joystick_now.y > 135) //Joystick is moved downwards.
+			if(joystick_now.y > 135) 				//Joystick is moved downwards.
 			{
 				gjoyStickSelection = JoyStickDown;
 			}
-			else if((joystick_now.y < 110))//Joystick moved upwards
+			else if((joystick_now.y < 110))			//Joystick moved upwards
 			{
 				gjoyStickSelection = JoyStickUp;
 			}
 			else
 			{
 				gShapeDownMovementSpeedGaurd=true;
-				gjoyStickSelection = JoyStickNoSelection;
+				gjoyStickSelection = JoyStickNoSelection;	//If the joystick hasn't moved.
 			}
-			vTaskDelayUntil(&xLastWakeTime, 20);
+			vTaskDelayUntil(&xLastWakeTime, 20); 			//Polls the joystick every 20 ticks.
 		}
 	}
 
@@ -888,7 +899,8 @@ void vTimerCallback(TimerHandle_t pxTimer){
  *-------------------------------------------*/
 void timerInit(){
 	//Software timer to debounce the button
-	xTimers = xTimerCreate("timer", 200 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);  //It overflows in 10ms and then it calls the vTimerCallback
+	//It overflows in 200ms and then it calls the vTimerCallback
+	xTimers = xTimerCreate("timer", 200 / portTICK_PERIOD_MS, pdTRUE, (void *)1, vTimerCallback);
 
 	xTimerStart(xTimers, 0);
 	xTimerStop(xTimers, 0);
@@ -908,24 +920,33 @@ void timerStart(){
 }
 /************************************************************************************************/
 
+/*-------------------------------------------
+ *@desc: Sends a 32 bit integer through the UART connection. It also makes a simple checksum of the bytes that will be sent for
+ *		 simple error detection.
+ *
+ *@param:	-void
+ *
+ *@return:	-void
+ *-------------------------------------------*/
 void sendValue(uint32_t  anIntegerValue)
 {
 	uint8_t bytes[4];
 	char checksum;
-
+	//Because we can only send byte by byte through the UART we divide the 32 bit integer in 4 bytes.
 	bytes[3] = (anIntegerValue >> 24) & 0xFF;
 	bytes[2] = (anIntegerValue >> 16) & 0xFF;
 	bytes[1] = (anIntegerValue >> 8) & 0xFF;
 	bytes[0] = anIntegerValue & 0xFF;
 	// Generate simple error detection checksum
 	checksum = bytes[3] ^ bytes[2] ^ bytes[1] ^ bytes[0];
+
 	// Structure of one packet:
 	//  Start byte
 	//	4 * line byte
 	//	checksum (all xor)
 	//	End byte
+
 	UART_SendData((uint8_t) ESPL_StartByte);
-	//UART_SendData((uint8_t) (*aByteValue));
 	UART_SendData((uint8_t) (bytes[0]));
 	UART_SendData((uint8_t) (bytes[1]));
 	UART_SendData((uint8_t) (bytes[2]));
@@ -934,16 +955,19 @@ void sendValue(uint32_t  anIntegerValue)
 	UART_SendData((uint8_t) ESPL_StopByte);
 }
 
-/**
- * Task which receives data via UART and decodes it.
- */
+/*-------------------------------------------
+ *@desc: Taks which receives data via UART and decodes it.
+ *
+ *@param:	-void
+ *
+ *@return:	-void
+ *-------------------------------------------*/
 static void ReceiveValue()
 {
 	char input;
 	uint8_t pos = 0;
 	char checksum;
 	char buffer[7];
-	//struct line line;
 	while (TRUE)
 	 {
 		// wait for data in queue
@@ -953,38 +977,37 @@ static void ReceiveValue()
 			// start byte
 			case 0:
 				if (input == ESPL_StartByte) {
-					buffer[0] = input;
+					buffer[0] = input;	//Start byte of the data received
 					pos = 1;
 				}
 				break;
 			// line bytes
 			case 1:
-				buffer[1] = input; //first byte sent from other device.
-				pos = 2; //set it to check for next byte
+				buffer[1] = input;	//first data byte sent from other device.
+				pos = 2; 			//set it to check for next byte
 				break;
 			case 2:
-				buffer[2] = input; //second byte sent from other device.
-				pos = 3; //set it to check for next byte
+				buffer[2] = input;	//second data byte sent from other device.
+				pos = 3;			//set it to check for next byte
 				break;
 			case 3:
-				buffer[3] = input; //third byte sent from other device.
-				pos = 4;//set it to check for next byte
+				buffer[3] = input;	//third data byte sent from other device.
+				pos = 4;			//set it to check for next byte
 				break;
 			case 4:
-				buffer[4] = input; //third byte sent from other device.
-				pos = 5; //set it to check for next byte
+				buffer[4] = input;	//fourth data byte sent from other device.
+				pos = 5; 			//set it to check for next byte
 				break;
 			case 5:
-				buffer[5] = input; //checksum value.
+				buffer[5] = input;	//checksum value.
 				pos = 6;
 				break;
+			// stop byte
 			case 6:
-				if (input == ESPL_StopByte){
-					//checksum = xorChar ^ buffer[1];
+				if (input == ESPL_StopByte){	//Limiting byte of the data received
 					checksum = buffer[4] ^ buffer[3] ^ buffer[2] ^ buffer[1];
-					if(checksum==buffer[5])
+					if(checksum==buffer[5])		//Check for errors
 					{
-						//gReceiving = buffer[1];//sendData(buffer[1])
 						gReceiving = (buffer[4]<<24) | (buffer[3]<<16) | (buffer[2]<<8) | (buffer[1]);
 						pos = 0;
 					}

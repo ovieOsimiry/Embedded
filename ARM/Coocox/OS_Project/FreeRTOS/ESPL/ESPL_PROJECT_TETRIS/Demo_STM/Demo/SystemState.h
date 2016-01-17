@@ -20,6 +20,6 @@ typedef enum
 
 void startState();
 systemState_t getState();
-void setState(systemState_t state);//(int state);
+void setState(systemState_t state);
 
 #endif

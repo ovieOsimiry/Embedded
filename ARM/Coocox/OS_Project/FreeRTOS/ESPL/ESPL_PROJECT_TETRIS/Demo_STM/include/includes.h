@@ -1,7 +1,7 @@
 /**
  * Main include file.
  *
- * @author: Jonathan Müller-Boruttau, Nadja Peters nadja.peters@tum.de (RCS, TUM)
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
  *
  **/
 #include "stdio.h"
@@ -45,6 +45,4 @@
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_ltdc.h"
-//#include "stm32f4xx_dma2d.h"
-//#include "stm32f4xx_spi.h"
 #include "stm32f4xx_adc.h"

@@ -1,3 +1,11 @@
+/*
+ * This file contains declarations of public drawing functions, and configuration settings for drawing and displaying
+ * meaningful objects on the screen.
+ *
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
+ *
+ * */
+
 #ifndef DRAW_H
 #define DRAW_H
 
@@ -21,11 +29,11 @@
 #define BOARDER_THICKNESS 5//11
 /*---------------------------------------------------------------*/
 void DrawPauseMenu();
-void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore );//(const joystickselection_t * joystickselection , const playermode_t * playerMode );
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore );
 void DrawShapeWithHandle(shape_t * ptrShape);
 void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2playerGameNoOfRoundsWon,
 		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state);
-void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon);//(const joystickselection_t * joystickselection );
+void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon);
 
 void InitializeBoardMatrix();
 boolean_t IsMoveMentPossible (shape_t * ptrShape);

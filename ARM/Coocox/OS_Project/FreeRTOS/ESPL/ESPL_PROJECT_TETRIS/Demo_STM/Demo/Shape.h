@@ -1,3 +1,10 @@
+/*
+ * This file contains declaration of all the public functions, definition of custom data structures and types for the TETRIS game.
+ *
+ * @author: Eduardo Ocete, Natalia Paredes, Ovie Osimiry
+ *
+ * */
+
 #ifndef SHAPE_H
 #define SHAPE_H
 

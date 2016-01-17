@@ -60,12 +60,13 @@ void DrawShapeWithHandle(shape_t * ptrShape)
 }
 
 /* -------------------------------------------
- *@desc Draws a custom block on the screen according to the
- *@desc parameters given
- *@param x,y - coordinates of the block
- *@param cx, cy - size of the block
- *@param color - color of the block
- *@return void function
+ *@desc: Draws a custom block on the screen according to the parameters given.
+ *
+ *@param: x,y 	- coordinates of the block
+ *@param: cx, cy - size of the block
+ *@param: color 	- color of the block
+ *
+ *@return: 		- void
  * ------------------------------------------- */
 void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color)
 {
@@ -74,9 +75,11 @@ void DrawCustomBlock(coord_t x, coord_t y, coord_t cx, coord_t cy, color_t color
 }
 
 /* -------------------------------------------
- *@desc Draws the shape to be playable into the next box
- *@param ptrShape - next shape
- *@return void function
+ *@desc: Draws the shape to be playable into the next box
+ *
+ *@param: ptrShape	- next shape
+ *
+ *@return:			- void
  * ------------------------------------------- */
 void DrawNextShape(shape_t * ptrShape)
 {
@@ -100,17 +103,19 @@ void DrawNextShape(shape_t * ptrShape)
 	}
 }
 
-///NOT FINISHED
 /* -------------------------------------------
- *@desc Draws the game screen depending on the state of the game (1 or 2 player mode)
- *@param ptrShape - next Shape
- *@param lines - lines made
- *@param score - actual score
- *@param level - current level
- *@param sth
- *@param sth
- *@param state - state of the game ( 1 or 2 player mode)
- *@return void function
+ *@desc: Draws the game screen depending on the state of the game (1 or 2 player mode).
+ *
+ *@param: ptrShape 						- next Shape
+ *@param: lines 							- lines made
+ *@param: score 							- actual score
+ *@param: level 							- current level
+ *@param: g2playerGameNoOfRoundsWon		- rounds won by player 2
+ *@param: g2playerGameNoOfRounds			- total number of rounds played
+ *@param: gPlayer2NumOfLinesCompleted	- opponent completed lines
+ *@param: state							- state of the game ( 1 or 2 player mode)
+ *
+ *@return:								- void
  * ------------------------------------------- */
 void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2playerGameNoOfRoundsWon,
 		int g2playerGameNoOfRounds, int gPlayer2NumOfLinesCompleted, systemState_t state)//(int nextShape,int nextRotation,int lines, int score, int level, int receiving, int sending)
@@ -240,13 +245,15 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2pl
 }
 
 /* -------------------------------------------
- *@desc Draws the main menu screen
- *@param gSelectionArrowPosition - Possible selection according to the joystick
- *@param playerMode - 1 or 2 player mode
- *@param gHighestScore - highest score of the game
- *@return void function
+ *@desc: Draws the main menu screen.
+ *
+ *@param: gSelectionArrowPosition	- Possible selection according to the joystick
+ *@param: playerMode 				- 1 or 2 player mode
+ *@param: gHighestScore 				- highest score of the game
+ *
+ *@return:							- void
  * ------------------------------------------- */
-void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore )//(const joystickselection_t * joystickselection, const playermode_t * playerMode )
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -277,7 +284,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	for(int i = 10; i <= 320-10; i = i+10)
 	{
 		color_t mColor;
-		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		switch (j)
 		{
 			case 1: mColor = Red; break;	// For each block of the piece except the pivot
 			case 2: mColor = Yellow; break;	//
@@ -295,7 +302,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	for(int i = 10; i <= 240-10; i = i+10)
 	{
 			color_t mColor;
-			switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+			switch (j)
 			{
 				case 1: mColor = Red; break;	// For each block of the piece except the pivot
 				case 2: mColor = Yellow; break;	//
@@ -313,7 +320,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	for(int i = 10; i <= 320-10; i = i+10)
 	{
 		color_t mColor;
-		switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+		switch (j)
 		{
 			case 1: mColor = Red; break;	// For each block of the piece except the pivot
 			case 2: mColor = Yellow; break;	//
@@ -433,12 +440,12 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 	gdispFillArea(160-5+2+80, 20+32, 8,8, titleColor);
 
 
-	if(*gSelectionArrowPosition==0)////if(*joystickselection==JoyStickUp)
+	if(*gSelectionArrowPosition==0)
 	{
 		gdispFillArea(115, 103, 10,10, Black);
 		gdispFillArea(115+2, 103, 8,8, titleColor);
 	}
-	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)//(*joystickselection==JoyStickDown && *playerMode==twoPlayerMode)//if(getState()==2)
+	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)
 	{
 		gdispFillArea(110, 143, 10,10, Black);
 		gdispFillArea(110+2, 143, 8,8, titleColor);
@@ -471,14 +478,16 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 }
 
 /* -------------------------------------------
- *@desc Draws the game over screen
- *@param gSelectionArrowPosition - Possible selection according to the joystick
- *@param gWhoWon - displays who won the game ( in case of two player mode)
- *@param gWhoWon - 0 = 1 player mode; 1 = You won (2players); 2= your opponent won (2players)
- *@return void function
+ *@desc: Draws the game over screen.
+ *
+ *@param: gSelectionArrowPosition	- Possible selection according to the joystick
+ *@param: gWhoWon 					- displays who won the game ( in case of two player mode)
+ *@param: gWhoWon					- 0 = 1 player mode; 1 = You won (2players); 2= your opponent won (2players)
+ *
+ *@return:							- void
  * ------------------------------------------- */
 
-void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const joystickselection_t * joystickselection  )
+void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -487,7 +496,7 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 			for(int i = 0; i <= 240-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
 					case 2: mColor = Yellow; break;	//
@@ -506,7 +515,7 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 			for(int i = 10; i <= 320-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
 					case 2: mColor = Yellow; break;	//
@@ -524,12 +533,12 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 			for(int i = 10; i <= 240-10; i = i+10)
 			{
 					color_t mColor;
-					switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+					switch (j)
 					{
 						case 1: mColor = Red; break;	// For each block of the piece except the pivot
-						case 2: mColor = Yellow; break;	//
-						case 3: mColor = Green; break;	//
-						case 4: mColor = Orange; break;	//
+						case 2: mColor = Yellow; break;
+						case 3: mColor = Green; break;
+						case 4: mColor = Orange; break;
 						case 5: mColor = Blue; break;
 					}
 					gdispFillArea(319-10, 0+i, 10,10, Black);
@@ -542,12 +551,12 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 			for(int i = 10; i <= 320-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
-					case 2: mColor = Yellow; break;	//
-					case 3: mColor = Green; break;	//
-					case 4: mColor = Orange; break;	//
+					case 2: mColor = Yellow; break;
+					case 3: mColor = Green; break;
+					case 4: mColor = Orange; break;
 					case 5: mColor = Blue; break;
 				}
 				gdispFillArea(0+i, 239-10, 10,10, Black);
@@ -566,12 +575,12 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 
 
 
-	if(*gSelectionArrowPosition==0)//(*joystickselection==JoyStickUp)
+	if(*gSelectionArrowPosition==0)
 	{
 		gdispFillArea(115, 103, 10,10, Black);
 		gdispFillArea(115+2, 103, 8,8, Lime);
 	}
-	if(*gSelectionArrowPosition==1)//(*joystickselection==JoyStickDown)
+	if(*gSelectionArrowPosition==1)
 	{
 		gdispFillArea(105, 143, 10,10, Black);
 		gdispFillArea(105+2, 143, 8,8, Lime);
@@ -605,9 +614,11 @@ void DrawGameOver(const uint8_t * gSelectionArrowPosition, int gWhoWon)//(const 
 }
 
 /* -------------------------------------------
- *@desc Draws the pause screen
- *@param gSelectionArrowPosition - Possible selection according to the joystick
- *@return void function
+ *@desc: Draws the pause screen.
+ *
+ *@param: gSelectionArrowPosition	- Possible selection according to the joystick
+ *
+ *@return:							- void
  * ------------------------------------------- */
 void DrawPauseMenu(uint8_t * selectionArrowPosition){
 	char str[100]; // Init buffer for message
@@ -617,12 +628,12 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 			for(int i = 0; i <= 240-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
-					case 2: mColor = Yellow; break;	//
-					case 3: mColor = Green; break;	//
-					case 4: mColor = Orange; break;	//
+					case 2: mColor = Yellow; break;
+					case 3: mColor = Green; break;
+					case 4: mColor = Orange; break;
 					case 5: mColor = Blue; break;
 				}
 
@@ -636,12 +647,12 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 			for(int i = 10; i <= 320-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
-					case 2: mColor = Yellow; break;	//
-					case 3: mColor = Green; break;	//
-					case 4: mColor = Orange; break;	//
+					case 2: mColor = Yellow; break;
+					case 3: mColor = Green; break;
+					case 4: mColor = Orange; break;
 					case 5: mColor = Blue; break;
 				}
 				gdispFillArea(0+i, 0, 10,10, Black);
@@ -654,12 +665,12 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 			for(int i = 10; i <= 240-10; i = i+10)
 			{
 					color_t mColor;
-					switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+					switch (j)
 					{
 						case 1: mColor = Red; break;	// For each block of the piece except the pivot
-						case 2: mColor = Yellow; break;	//
-						case 3: mColor = Green; break;	//
-						case 4: mColor = Orange; break;	//
+						case 2: mColor = Yellow; break;
+						case 3: mColor = Green; break;
+						case 4: mColor = Orange; break;
 						case 5: mColor = Blue; break;
 					}
 					gdispFillArea(319-10, 0+i, 10,10, Black);
@@ -672,12 +683,12 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 			for(int i = 10; i <= 320-10; i = i+10)
 			{
 				color_t mColor;
-				switch (j)//(GetAPeiceFromTheShape (type, orientation, j, i))
+				switch (j)
 				{
 					case 1: mColor = Red; break;	// For each block of the piece except the pivot
-					case 2: mColor = Yellow; break;	//
-					case 3: mColor = Green; break;	//
-					case 4: mColor = Orange; break;	//
+					case 2: mColor = Yellow; break;
+					case 3: mColor = Green; break;
+					case 4: mColor = Orange; break;
 					case 5: mColor = Blue; break;
 				}
 				gdispFillArea(0+i, 239-10, 10,10, Black);
@@ -693,18 +704,17 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 		sprintf(str, "PAUSE");
 		gdispDrawString(110, 30, str, font1, Lime);
 
-	//if(getState() == 4)
 	if(*selectionArrowPosition==0)
 	{
 		gdispFillArea(115, 103, 10,10, Black);
 		gdispFillArea(115+2, 103, 8,8, Lime);
 	}
-	else if(*selectionArrowPosition==1)//else if(getState() == 5)
+	else if(*selectionArrowPosition==1)
 	{
 		gdispFillArea(95, 143, 10,10, Black);
 		gdispFillArea(95+2, 143, 8,8, Lime);
 	}
-	else if(*selectionArrowPosition==2)//else if(getState() == 6)
+	else if(*selectionArrowPosition==2)
 	{
 		gdispFillArea(108, 183, 10,10, Black);
 		gdispFillArea(108+2, 183, 8,8, Lime);
@@ -730,9 +740,11 @@ void DrawPauseMenu(uint8_t * selectionArrowPosition){
 }
 
 /* -------------------------------------------
- *@desc Get color depending on the given number
- *@param color - number of the color
- *@return color type (default White)
+ *@desc: Get color depending on the given number.
+ *
+ *@param: color  - number of the color
+ *
+ *@return: color - type of color (default White)
  * ------------------------------------------- */
 color_t GetColor(char color)
 {
@@ -762,9 +774,11 @@ color_t GetColor(char color)
 }
 
 /* -------------------------------------------
- *@desc Checks the state of a piece of the matrix
- *@param pX, pY - Coordinate of the piece
- *@return char - state of the piece in the matrix
+ *@desc: Checks the state of a piece of the matrix.
+ *
+ *@param: pX, pY	- Coordinate of the piece
+ *
+ *@return: char 	- state of the piece in the matrix
  * ------------------------------------------- */
 char GetPeiceType(int pX, int pY)
 {
@@ -785,7 +799,6 @@ boolean_t IsMoveMentPossible (shape_t * ptrShape)
 			// Check if the shape is outside the limits of the board
 			if(	i1 < 0 	||	i1 > BOARD_WIDTH_IN_BLOCKS  - 1	|| 	j1 > BOARD_HEIGHT_IN_BLOCKS - 1)
 			{
-				//if(ptrShape->GetAPeiceFromShape(ptrShape,j2,i2)!= 0)//
 				if(ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j2, i2) != 0)
 					return false;
 			}
@@ -794,7 +807,6 @@ boolean_t IsMoveMentPossible (shape_t * ptrShape)
 			if (j1 >= 0)
 			{
 				status = GetPeiceType(i1, j1);
-				//blockType = ptrShape->GetAPeiceFromShape(ptrShape,j2,i2);//
 				blocktype = ptrShape->GetAPeiceFromShape(ptrShape->pArr, ptrShape->shapeOrientation, j2, i2);
 				if ((blocktype != 0) && (status!=0))
 					return false;
@@ -814,7 +826,6 @@ void StoreShape (shape_t * ptrShape)
 	{
 		for (int j1 = ptrShape->y, j2 = 0; j1 < ptrShape->y + SHAPE_MATRIX_DIMENSION; j1++, j2++)
 		{
-			//blockType = ptrShape->GetAPeiceFromShape(ptrShape,j2,i2);
 			blockType = ptrShape->GetAPeiceFromShape(ptrShape->pArr,ptrShape->shapeOrientation,j2,i2);
 			if (blockType!= 0)
 				BoardMatrix[i1][j1] = blockType;
@@ -823,9 +834,11 @@ void StoreShape (shape_t * ptrShape)
 }
 
 /* -------------------------------------------
- *@desc Deletes a line of blocks in the matrix
- *@param pY - line coordinate to delete
- *@return void function
+ *@desc: Deletes a line of blocks in the matrix.
+ *
+ *@param: pY	- line coordinate to delete
+ *
+ *@return: 		- void
  * ------------------------------------------- */
 void DeleteLine (int pY)
 {
@@ -931,9 +944,11 @@ void AddLine(int NumOfLines, shape_t * ptrShape){
 
 
 /* -------------------------------------------
- *@desc Checks and deletes the lines that are already filled with blocks
- *@param void parameters
- *@return int - number of deleted lines
+ *@desc: Checks and deletes the lines that are already filled with blocks.
+ *
+ *@param:		- void parameters
+ *
+ *@return: int	- number of deleted lines
  * ------------------------------------------- */
 int DeletePossibleLines ()
 {
@@ -958,9 +973,11 @@ int DeletePossibleLines ()
 }
 
 /* -------------------------------------------
- *@desc Checks the middle top of the matrix to see if there's blocks.
- *@param void parameters
- *@return boolean - true if the middle top of the matris is full.
+ *@desc: Checks the middle top of the matrix to see if there's blocks.
+ *
+ *@param:			- void parameters
+ *
+ *@return: boolean	- true if the middle top of the matrix is full.
  * ------------------------------------------- */
 boolean_t isGameOver()
 {
