@@ -253,7 +253,7 @@ void DrawGameFrame(shape_t * ptrShape, int lines, int score, int level, int g2pl
  *
  *@return:							- void
  * ------------------------------------------- */
-void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * playerMode, const int * gHighestScore )
+void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const int * gHighestScore )
 {
 	char str[100]; // Init buffer for message
 	gdispClear(Black);
@@ -445,7 +445,7 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 		gdispFillArea(115, 103, 10,10, Black);
 		gdispFillArea(115+2, 103, 8,8, titleColor);
 	}
-	if(*gSelectionArrowPosition==1 && *playerMode==twoPlayerMode)
+	if(*gSelectionArrowPosition==1)
 	{
 		gdispFillArea(110, 143, 10,10, Black);
 		gdispFillArea(110+2, 143, 8,8, titleColor);
@@ -456,12 +456,6 @@ void DrawMainMenu(const uint8_t * gSelectionArrowPosition, const playermode_t * 
 
 	sprintf(str, "2 Players");
 	gdispDrawString(125, 140, str, font1, White);
-
-	if(*playerMode==twoPlayerMode)
-	{
-		sprintf(str, "2 Players");
-		gdispDrawString(125, 140, str, font1, White);
-	}
 
 	gdispCloseFont(font1);
 	font1 = gdispOpenFont("UI1");

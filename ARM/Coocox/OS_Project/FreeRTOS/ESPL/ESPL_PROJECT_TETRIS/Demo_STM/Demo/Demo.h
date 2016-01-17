@@ -12,9 +12,6 @@
 //Enum type for representing joy stick selection
 typedef enum {JoyStickUp , JoyStickDown, JoyStickNoSelection} joystickselection_t;
 
-//Enum type for representing number players
-typedef enum {onePlayerMode, twoPlayerMode} playermode_t;
-
 struct line
 	{
 		char x_1;

@@ -35,58 +35,57 @@ JoyStickCord_t JoyStickVal = {0,0};
 // Stores lines to be drawn
 QueueHandle_t DrawQueue;
 
-/*--------------Please put all function prototypes used only within this file here----*/
+/*--------------Function prototypes used within this file--------------*/
 void ResetGamePlay();
 void CreateNewPiece();
 void VApplicationIdleHook();
 void sendValue(uint32_t  anIntegerValue);
+void InitializeNextShape();
 int calculateScore(int level, int lines);
 static void checkJoystick();
 static void drawTask();
 static void GamePlay();
 static void SystemState();
 static void ReceiveValue();
-/*-----------------Please put all shared global variables here------------------------*/
 
+/*-------------------Game play configuration constants and literals------------------------------------------------------------------------------------------------------*/
+#define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE	10;
+const uint8_t TWO_PLAYER_REQUEST_VALUE 					= 	0xeb;
+const int MAX_DIFFICULTY_LEVEL 							= 	9;		//Maximum number of difficulty level the game has
+const char MAX_TICK 									= 	100;	//Used to set the game speed in general.
+#define TWO_PLAYER_MODE_GAME_OVER  							0xab	//A special value received from UART that indicates that the 2nd player has lost due to a full screen.
+#define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 			30		//Maximum number of lines to complete to win a round in 2 player game.
+#define HORIZONTAL_CONTROL_MOVE_SPEED 						4		//Pre-scaler for fine tuning the speed at which the shape moves in the horizontal direction (best value is 4)
+#define VERTICAL_CONTROL_MOVE_SPEED 						2		//Pre-scaler for fine tuning the speed at which the shape moves in the horizontal direction (best value is 2)
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-int mNextShape, mNextRotation;	// Kind and rotation of the next piece
+/*-----------------------------------------------Global variables------------------------------------------------------------------------------------*/
+
 int debounce = 0; //Restricts the execution of the IRQ_handler if the debouncing time hasn't expired
 
-int gTotalNumberOfLinesCompleted = 0;
-int gGameScore = 0;
-int gDifficultyLevel;
-int gReceiving = 0;
-int gHighestScore = 0;
-int g2playerGameNoOfRoundsWon = 0;
-int g2playerGameNoOfRounds = 0;
-int gWhoWon = 0;
-uint8_t gSelectionArrowPosition = 0;
-uint8_t gPlayer1NumOfLinesCompleted = 0;
-uint8_t gPlayer2NumOfLinesCompleted = 0;
-shape_t gCurrentShape;
-shape_t gNextShape;
-joystickselection_t gjoyStickSelection = JoyStickNoSelection;
-joystickselection_t gjoyStickLastSelection = JoyStickNoSelection;
-boolean_t gSelectButtonPressed = false;
-boolean_t gShapeDownMovementSpeedGaurd = false;
-boolean_t gSend2PlayerRequestFlag = true;
-
-playermode_t gPlayerMode = onePlayerMode;
-/*---------------------Game Play global variables used in GamePlay task-------------*/
-#define INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE  15;
-const uint8_t TWO_PLAYER_REQUEST_VALUE = 0xeb;
-#define TWO_PLAYER_MODE_GAME_OVER  0xab
-#define TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE 30
-#define HORIZONTAL_CONTROL_MOVE_SPEED 4
-#define VERTICAL_CONTROL_MOVE_SPEED 2
 uint32_t gDifficultyCheckPoint;
+int gGameScore 						= 0;							//This variable holds the current game score of an ongoing game
+int gDifficultyLevel 				= 0;							//This variable holds the difficulty level of the game.
+int gValueReceivedFromUART			= 0;							//This variable holds the value received from the serial port.
+int gHighestScore = 0;												//This variable holds the most recent highest score of the game.
+int g2playerGameNoOfRoundsWon 		= 0;							//This variable holds the number of rounds the player has won when in 2 player game.
+int g2playerGameNoOfRounds 			= 0;							//This variable holds the total number of rounds played when in 2 player game.
+int gWhoWon = 0;													//
+uint8_t gSelectionArrowPosition 	= 0;							// variable for determining when the select button (button B) is pressed or released.
+int gTotalNumberOfLinesCompleted 	= 0;							//In one player game this variable holds the number of lines completed.
+uint8_t gPlayer1NumOfLinesCompleted = 0;							// In 2 player game this variable holds the number of lines the player has completed.
+uint8_t gPlayer2NumOfLinesCompleted = 0;							// In 2 player game this variable holds the number of lines the 2nd player has completed.
+shape_t gCurrentShape;												// A shape structure variable that holds the current shape.
+shape_t gNextShape;													// A shape structure variable that holds the next shape.
+joystickselection_t gjoyStickSelection = JoyStickNoSelection;		// This variable holds the current state of the joy-stick.
+joystickselection_t gjoyStickLastSelection = JoyStickNoSelection;	// This variable holds the last state of the joy-stick.
+boolean_t gSelectButtonPressed = false;								//
+boolean_t gShapeDownMovementSpeedGaurd = false;						//
+boolean_t gSend2PlayerRequestFlag = true;							//
 
-/*------------------------------------------------------------------------------------*/
+/*--------------------------RTOS related definitions----------------------------------------------------------------------*/
 
-
-/*--------------------------RTOS related definitions----------------------------------*/
-
-/*------------------------------Semaphores/Mutexs-------------------------------------*/
+/*------------------------------Semaphores/Mutexes-------------------------------------*/
 
 static TaskHandle_t gTaskSynchroNotification = NULL;
 
@@ -94,13 +93,11 @@ static TaskHandle_t gTaskSynchroNotification = NULL;
 TimerHandle_t xTimers; //Define the de-bouncing timer
 /*------------------------------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------------------------*/
-
-/**
+/*--------------------------------------------------------------------------------------
  * Entry function to the example program.
  * Initializes hardware and software.
  * Starts scheduler.
- */
+ --------------------------------------------------------------------------------------*/
 int main() {
 	// Initialize Board functions
 	ESPL_SystemInit();
@@ -109,6 +106,10 @@ int main() {
 
 	//Initialise the state of the game to main menu
 	startState();
+
+	//initialise the game play.
+	InitializeNextShape();
+	ResetGamePlay();
 
 	// Initializes Draw Queue with 100 lines buffer
 	DrawQueue = xQueueCreate(100, 4 * sizeof(char));
@@ -139,97 +140,92 @@ int main() {
  * ------------------------------------------- */
 void CreateNewShape()
 {
-	// The new shape
-	gCurrentShape = gNextShape;
-
-	int randNum;
-	TM_RNG_Init();
-	randNum = TM_RNG_Get() & 0x1f;
-	while(randNum>27)
-	{
-		randNum = TM_RNG_Get() & 0x1f;
-	}
-	gNextShape = GetShape(randNum);//compute next shape.
+	gCurrentShape = gNextShape;// update the new shape with the next shape.
+	InitializeNextShape(); //initialise gNetShape with a new shape.
 }
 
+/*--------------------------------------------------------------------------------------------
+ *@Desc:This task handles the state of the system. It is one of the most important tasks.
+ *		This Is assigned a priority of 3
+ --------------------------------------------------------------------------------------------*/
 static void SystemState()
 {
-	TickType_t _debounceDelay = 300;
-	/*------------------------Initialise all variables used within this task----------------*/
-	gPlayerMode = onePlayerMode;
-    gjoyStickLastSelection = JoyStickUp;
-    gSelectButtonPressed = 0;
-    gReceiving = 0;
-    gSend2PlayerRequestFlag = true;
-    uint8_t maxMenuCount = 0;
-    int lastState;
-    /*---------------------------------------------------------------------------------------*/
+	TickType_t _debounceDelay = 300; 		// delay for de-bounce button.
+
+	/*------------------------Initialise all variables used within this task-------------------------------------------------------------------------------------------*/
+
+	gjoyStickLastSelection = JoyStickUp; 	// Refer to the top for description
+    gSelectButtonPressed = 0; 				// Refer to the top for description
+    gValueReceivedFromUART = 0;				// Refer to the top for description
+    gSend2PlayerRequestFlag = true;			// Refer to the top for description
+
+    uint8_t maxMenuCount = 0; 				// This variable holds the maximum number of items present on a menu screen. index starts from 0. it is used as a reference
+    										// for checking if the index is at the last item.
+    int lastState;							// Holds the last state of the system. This is used for determining what state the system should go to for example
+    										// when the game is paused or when the game ends etc.
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 	while(1)
 	{
 
 			switch(getState())
 			{
 				case stateMainMenu:
-					maxMenuCount = 1;
+					maxMenuCount = 1;										// initialised to 1 because there are only 2 menu items in the main menu screen. index starts from 0.
 
-					if(gjoyStickSelection == JoyStickUp)
+					if(gjoyStickSelection == JoyStickUp) 					//Check if we have moved the joy-stick up to select the first item in the main menu
 						{
-						   gPlayerMode = onePlayerMode;
-						   gReceiving = 0;
+						   gValueReceivedFromUART = 0;
 
-						   if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+						   if(gjoyStickLastSelection==JoyStickNoSelection)	//check if the joy stick has been released. This is just a guard to make sure that the selection arrow moves only once for each joy-stick movement.
 							{
-								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
-								if(gSelectionArrowPosition!=0)
+								gjoyStickLastSelection = JoyStickUp;		//update the local joy stick variable accordingly.
+								if(gSelectionArrowPosition!=0)				//check if the selection index is already at its least value.
 								{
-									--gSelectionArrowPosition;
+									--gSelectionArrowPosition; 				//if the selection index is not already at the least value (1 player game) then decrease it by 1.
 								}
-								gjoyStickLastSelection = JoyStickUp;
 							}
 						}
-					else if(gjoyStickSelection == JoyStickDown)
+					else if(gjoyStickSelection == JoyStickDown)						//Check if we have moved the joy-stick to select the second item in the main menu
 						{
-							gSend2PlayerRequestFlag = true;// enable flag so that a response can be sent back.
-							sendValue(TWO_PLAYER_REQUEST_VALUE);
-							if(gReceiving == TWO_PLAYER_REQUEST_VALUE)
+							gSend2PlayerRequestFlag = true;							// enable flag so that a response can be sent back to the second player.
+							sendValue(TWO_PLAYER_REQUEST_VALUE);					// send a request to the 2nd player for 2 player game.
+							if(gValueReceivedFromUART == TWO_PLAYER_REQUEST_VALUE)	// check if the request was acknowledged by the 2nd player
 							{
-								gPlayerMode = twoPlayerMode;
 								gjoyStickLastSelection = JoyStickDown;
-								gReceiving = 0;//reset received value
+								gValueReceivedFromUART = 0;							//reset received value
 
+								if(gSelectionArrowPosition!=maxMenuCount)			//check if the selection index is already at its max value.
 								{
-									if(gSelectionArrowPosition!=maxMenuCount)
-									{
-										++gSelectionArrowPosition;
-									}
+									++gSelectionArrowPosition;						//if the selection index is not already at the max value (2 player game) then increase it by 1.
 								}
 							}
 						}
-					else
+					else	//if the joy stick has been released to the neutral position then set gjoyStickLastSelection accordingly.
 						{
-						gjoyStickLastSelection=JoyStickNoSelection;
-							if(gReceiving==TWO_PLAYER_REQUEST_VALUE)
+							gjoyStickLastSelection=JoyStickNoSelection;
+							if(gValueReceivedFromUART==TWO_PLAYER_REQUEST_VALUE) //check if we receive a request for 2 player game
 							 {
-								gReceiving = 0;
-								sendValue(TWO_PLAYER_REQUEST_VALUE);
+								gValueReceivedFromUART = 0;
+								sendValue(TWO_PLAYER_REQUEST_VALUE);			//if request for 2 player game was received, then acknowledge the request.
 								gSend2PlayerRequestFlag = false;
 							 }
 						}
-						if (gSelectButtonPressed && gSelectionArrowPosition==0)
+
+						if (gSelectButtonPressed && gSelectionArrowPosition==0)	//if the select button (button B) is pushed and the menu index is 0, select 1st item on menu (1 player game)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
-							gReceiving = 0;
-							setState(stateGame1Player);//1 player mode
+							gValueReceivedFromUART = 0;
+							setState(stateGame1Player);							//set state to 1 player mode
 							gSelectionArrowPosition = 0;
 						}
 
-						if (gSelectButtonPressed && gSelectionArrowPosition==1)
+						if (gSelectButtonPressed && gSelectionArrowPosition==1) //if the select button (button B) is pushed and the menu index is 1, select 2nd item on menu (2 player game)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
-							gReceiving = 0;
-							setState(stateGame2Player);//2 player mode
+							gValueReceivedFromUART = 0;
+							setState(stateGame2Player);							// set state to 2 player mode
 							gSelectionArrowPosition = 0;
 						}
 				break;
@@ -237,7 +233,7 @@ static void SystemState()
 				case stateGame1Player:
 					gSelectButtonPressed = 0;
 					lastState = stateGame1Player;
-					//We wake up the Gameplay task if we are in state 2 (gaming screen in two player mode)
+					//We wake up the Gameplay task if we are in any game state (stateGame1Player or stateGame2Player)
 					xTaskNotifyGive(gTaskSynchroNotification);
 
 				break;
@@ -245,32 +241,33 @@ static void SystemState()
 				case stateGame2Player:
 					gSelectButtonPressed = 0;
 					lastState = stateGame2Player;
-					//We wake up the Gameplay task if we are in  stateGame1Player or stateGame2Player (gaming screen in one player mode)
+					//We wake up the Gameplay task if we are in any game state (stateGame1Player or stateGame2Player)
 					xTaskNotifyGive(gTaskSynchroNotification);
 
 				break;
+
 				case stateGamePaused:
-					maxMenuCount = 2;
+					maxMenuCount = 2;										// initialised to 2 because there are 3 menu items in the pause menu screen. index starts from 0.
 					if(gjoyStickSelection == JoyStickUp)
 						{
-							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. This is just a guard to make sure that the selection arrow moves only once for each joy-stick movement.
 							{
-								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
-								if(gSelectionArrowPosition!=0)
+								gjoyStickLastSelection = JoyStickUp;
+								if(gSelectionArrowPosition!=0) 				//check if the selection index is already at its least value.
 								{
-									--gSelectionArrowPosition;
+									--gSelectionArrowPosition;				//if the selection index is not already at the least value (first item) then decrease it by 1.
 								}
 								gjoyStickLastSelection = JoyStickUp;
 							}
 						}
 					else if(gjoyStickSelection == JoyStickDown)
 						{
-							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. This is just a guard to make sure that the selection arrow moves only once for each joy-stick movement.
 							{
-								gjoyStickLastSelection = JoyStickDown;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
-								if(gSelectionArrowPosition!=maxMenuCount)
+								gjoyStickLastSelection = JoyStickDown;
+								if(gSelectionArrowPosition!=maxMenuCount)	//check if the selection on the menu is already at its max value.
 								{
-									++gSelectionArrowPosition;
+									++gSelectionArrowPosition;				//if the selection index is not already at its max value (last item) then increase it by 1.
 								}
 							}
 						}
@@ -278,84 +275,86 @@ static void SystemState()
 						{
 							gjoyStickLastSelection = JoyStickNoSelection;
 						}
-						if (gSelectButtonPressed && gSelectionArrowPosition == 0)
+						if (gSelectButtonPressed && gSelectionArrowPosition == 0) //if the select button (button B) is pushed and the menu index is 0, select 1st item on menu (Resume Game)
 						{
-							vTaskDelay(_debounceDelay);//wait for the button to settle
+							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
-							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
+							gSelectionArrowPosition = 0;
 							if(lastState==stateGame1Player)
-								setState(stateGame1Player);
-							else if(lastState==stateGame2Player)
+								setState(stateGame1Player);							//Before we paused the game if we were previously in 1 player game then we return back to 1 player game (stateGame1Player)
+							else if(lastState==stateGame2Player)					//else we return to 2 player game (stateGame2Player).
 								setState(stateGame2Player);
 						}
 
-						if (gSelectButtonPressed && gSelectionArrowPosition == 1)
+						if (gSelectButtonPressed && gSelectionArrowPosition == 1)	//if the select button (button B) is pushed and the menu index is 1, select 2nd item on menu (Restart Game)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
-							if(lastState==stateGame1Player)
-								setState(stateGame1Player);
+							if(lastState==stateGame1Player)							//Before we paused the game if we were previously in 1 player game then we return back to 1 player game (stateGame1Player)
+								setState(stateGame1Player);                         //else we return to to 2 player game (stateGame2Player).
 							else if(lastState==stateGame2Player)
 								setState(stateGame2Player);
-							ResetGamePlay(); //restart the game
+							ResetGamePlay(); 										//reset all game progress so that the game can restart afresh.
 						}
 
-						if (gSelectButtonPressed && gSelectionArrowPosition == 2)
+						if (gSelectButtonPressed && gSelectionArrowPosition == 2)	//if the select button (button B) is pushed and the menu index is 2, select 3rd item on menu (Exit Game)
 						{
 							vTaskDelay(_debounceDelay);
-							gSelectionArrowPosition = 0; //reset the menu selection to start from the first menu item
-							ResetGamePlay();
+							gSelectionArrowPosition = 0;
+							ResetGamePlay();										//reset all game progress so that the game can restart afresh.
 							gSelectButtonPressed = 0;
-							setState(stateMainMenu);
+							setState(stateMainMenu);								//change the system state to main menu.
 						}
 				break;
+
 				case stateGameOver:
 					maxMenuCount = 1;
 					if(gjoyStickSelection == JoyStickUp)
 						{
-							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							if(gjoyStickLastSelection==JoyStickNoSelection) 		//check if the joy stick has been released. This is just a guard to make sure that the selection arrow moves only once for each joy-stick movement.
 							{
-								gjoyStickLastSelection = JoyStickUp;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
-								if(gSelectionArrowPosition!=0)
+								gjoyStickLastSelection = JoyStickUp;
+								if(gSelectionArrowPosition!=0)						//check if the selection index is already at its least value.
 								{
-									--gSelectionArrowPosition;
+									--gSelectionArrowPosition;						//if the selection index is not already at the least value (first item) then decrease it by 1.
 								}
 								gjoyStickLastSelection = JoyStickUp;
 							}
 						}
 					else if(gjoyStickSelection == JoyStickDown)
 						{
-							if(gjoyStickLastSelection==JoyStickNoSelection) //check if the joy stick has been released. If has been released then enter.
+							if(gjoyStickLastSelection==JoyStickNoSelection) 	//check if the joy stick has been released. This is just a guard to make sure that the selection arrow moves only once for each joy-stick movement.
 							{
-								gjoyStickLastSelection = JoyStickDown;//update the joy stick to up selection to prevent the selectionArrowPosition from changing continuously.
-								if(gSelectionArrowPosition!=maxMenuCount)
+								gjoyStickLastSelection = JoyStickDown;
+								if(gSelectionArrowPosition!=maxMenuCount)		//check if the selection on the menu is already at its max value.
 								{
-									++gSelectionArrowPosition;
+									++gSelectionArrowPosition;					//if the selection index is not already at its max value (last item) then increase it by 1.
 								}
 							}
 						}
-					else
+					else //if the joy stick has been released to the neutral position then update gjoyStickLastSelection accordingly
 						{
 							gjoyStickLastSelection = JoyStickNoSelection;
 						}
 
-						if(gSelectButtonPressed && gSelectionArrowPosition==0)//gjoyStickLastSelection==JoyStickUp)//restart game
+						if(gSelectButtonPressed && gSelectionArrowPosition==0)	//if the select button (button B) is pushed and the menu index is 0, select 1st item on menu (Restart Game)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
 
-							if(lastState==stateGame1Player)
-								setState(stateGame1Player);
+							if(lastState==stateGame1Player)						//Before we paused the game if we were previously in 1 player game then we return back to 1 player game (stateGame1Player)
+								setState(stateGame1Player);                     //else we return to to 2 player game (stateGame2Player).
 							else if(lastState==stateGame2Player)
 								setState(stateGame2Player);
 						}
-						if(gSelectButtonPressed && gSelectionArrowPosition == 1)//gjoyStickLastSelection==JoyStickDown)//go to main menu
+						if(gSelectButtonPressed && gSelectionArrowPosition == 1)//if the select button (button B) is pushed and the menu index is 1, select 2nd item on menu (Main menu)
 						{
 							vTaskDelay(_debounceDelay);
 							gSelectButtonPressed = 0;
+							gSelectionArrowPosition = 0;
 							gjoyStickLastSelection=JoyStickUp;
-							setState(stateMainMenu);
+							setState(stateMainMenu);							//set the system state to main menu.
 						}
 					break;
 			}
@@ -364,100 +363,88 @@ static void SystemState()
 	}
 }
 
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------/
+ *
+ * @Desc: 	This is where all the TETRIS game action is happening. This task is mostly concerned with the game logic e.g. movement of
+ * 			shapes, storing of shapes, when the game should end etc.
+ *
+ --------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
 static void GamePlay()
 {
-		shape_t * ptrShape = &gCurrentShape;
-		shape_t shapeTemp;// used for temporary calculations
-		const int MAX_DIFFICULTY_LEVEL = 9;
-		const char MAX_TICK = 100;
+		shape_t * ptrShape = &gCurrentShape;			// A pointer handle to the current shape global variable (gCurrentShape).
+		shape_t shapeTemp;								// used for temporary calculations on the shape.
 		int tick = 0;
 		boolean_t downMovePossible = true;
 		int tempNoOfLines = 0;
 		char verticalSpeed = 0;
-//@-------------------------------------------
-		int randNo;
-		TM_RNG_Init();
-		randNo = TM_RNG_Get() & 0x1f;
-		while(randNo>27)
-		{
-			randNo = TM_RNG_Get() & 0x1f;
-		}
-	    gNextShape = GetShape(randNo);
-		CreateNewShape();
-//@-------------------------------------------
 
-
-/*--------Initialise global variables used within this task----------------*/
-
-		gDifficultyLevel = 0;
-		gDifficultyCheckPoint = (uint32_t) INITIAL_NO_OF_LINES_DETERMINING_DIFFICULTY_CHANGE;
-
-/*-------------------------------------------------------------------------*/
 
 	while(1){
 				//Make the loop wait until the task notification from the SystemState task is released
 				ulTaskNotifyTake( pdTRUE, portMAX_DELAY);
 
 				vTaskDelay(10);
+
 				if(gTotalNumberOfLinesCompleted >= gDifficultyCheckPoint)
 				{
-					gDifficultyCheckPoint = gDifficultyCheckPoint + (10/(gDifficultyLevel+1));
+					gDifficultyCheckPoint = gDifficultyCheckPoint + (10*(gDifficultyLevel+1));
 					if(gDifficultyLevel!=MAX_DIFFICULTY_LEVEL)
 					 ++gDifficultyLevel;
 				}
 
-				if(getState() == stateGame2Player) //if we are in 2 player mode, when lines are sent add them.
+				if(getState() == stateGame2Player) 				//if we are in 2 player mode, when values are sent from UART interpret them properly and use them.
 				{
 
-					switch(gReceiving)
+					switch(gValueReceivedFromUART)
 					{
-						case TWO_PLAYER_MODE_GAME_OVER: // Takes care of when 2nd player loses by full screen.
+						case TWO_PLAYER_MODE_GAME_OVER: 			// Takes care of when 2nd player loses the game due to full screen.
 							++g2playerGameNoOfRoundsWon;
 							++g2playerGameNoOfRounds;
 							if(g2playerGameNoOfRoundsWon==4){
 								gWhoWon = 1;
 								setState(stateGameOver);
-								g2playerGameNoOfRoundsWon = 0; //reset variable for next time
+								g2playerGameNoOfRoundsWon = 0; 		//reset variable for next time
 								g2playerGameNoOfRounds = 0;
 								gPlayer1NumOfLinesCompleted = 0;
 								gPlayer2NumOfLinesCompleted = 0;
-								gReceiving = 0;
+								gValueReceivedFromUART = 0;
 							}else
 							{
 								ResetGamePlay();
-								tempNoOfLines = 0;//reset temporary local variables within the task.
+								tempNoOfLines = 0;					//reset temporary local variables within the task.
 								gPlayer1NumOfLinesCompleted = 0;
 								gPlayer2NumOfLinesCompleted = 0;
-								gReceiving = 0;//reset variable for next time
+								gValueReceivedFromUART = 0;			//reset variable for next time
 							}
 						break;
 
-						default ://Handles number of lines we receive or we generate.
+						default :									//This handles situations when we receive lines completed by 2nd player.
 
-							if(gReceiving!=0)
-								gPlayer2NumOfLinesCompleted+=gReceiving;//keep track of second player number of lines
+							if(gValueReceivedFromUART!=0)
+								gPlayer2NumOfLinesCompleted+=gValueReceivedFromUART;//keep track of second player number of lines
 
-							switch(gReceiving)
+							switch(gValueReceivedFromUART)			//Here lines are added based on the TETRIS rules
 							{
 								case 2:
-									AddLine(1,ptrShape);
-									gReceiving = 0;
+									AddLine(1,ptrShape);			// If 2 lines were completed by 2nd player then add 1 line.
+									gValueReceivedFromUART = 0;
 								break;
 								case 3:
-									AddLine(2,ptrShape);
-									gReceiving = 0;
+									AddLine(2,ptrShape);			// If 3 lines were completed by 2nd player then add 2 line.
+									gValueReceivedFromUART = 0;
 								break;
 								case 4:
-									AddLine(4,ptrShape);
-									gReceiving = 0;
+									AddLine(4,ptrShape);			// If 4 lines were completed by 2nd player then add 4 line.
+									gValueReceivedFromUART = 0;
 								break;
 							}
 
-							gReceiving=0;
+							gValueReceivedFromUART=0;
 
 
-							//We check our line count first because it got updated in the last cycle so we need to check it if we already reached 30 lines
-							//if our line count has reached 30 lines then it means we have won a round p.
+							//We check our local line completed first because it got updated in the last cycle so we need to check it if we already reached 30 lines
+							//if our line count has reached 30 lines then it means we have won a round 2 player game.
 							if(gPlayer1NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
 							{
 								if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)//we check if player 2 has also reached 30 lines and if so a tie has occurred.
@@ -488,10 +475,10 @@ static void GamePlay()
 									}
 								}
 							}
-							else if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE)
+							else if(gPlayer2NumOfLinesCompleted >=TWO_PLAYER_MODE_NO_OF_LINES_TO_COMPLETE) //If line count has not reached 30 then it means 2nd player has won the round.
 							{
 								++g2playerGameNoOfRounds;
-								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon) == 4)
+								if((g2playerGameNoOfRounds - g2playerGameNoOfRoundsWon) == 4) //if the total number of games played is greater than the number of rounds won by 4, then the game should end.
 								{
 									gWhoWon = 2;
 									setState(stateGameOver);
@@ -520,12 +507,18 @@ static void GamePlay()
 				else
 					tick++;
 
+			/*
+			 * Here the shape is moved down only when one of the condition is true. 1 -> if the default count before the shape should move has elapsed.
+			 * 2-> if the Joy-stick is moved down so that the shape can move rapidly, 3-> if the speed guard "gShapeDownMovementSpeedGaurd" to move a shape rapidly down is true
+			 */
 			if( (tick==(MAX_TICK/(gDifficultyLevel+1))) || ((gjoyStickSelection == JoyStickDown) && (gShapeDownMovementSpeedGaurd == true) ))
 				{
-					shapeTemp =  *ptrShape;
-					shapeTemp.y = shapeTemp.y + 1;
-					downMovePossible = IsMoveMentPossible(&shapeTemp);
-					if(downMovePossible==true)
+					shapeTemp =  *ptrShape;								//Initialize a tempory copy of the shape
+					shapeTemp.y = shapeTemp.y + 1;						//Increase its vertical position by 1.
+
+					downMovePossible = IsMoveMentPossible(&shapeTemp); //check if it is possible to accept this new position.
+
+					if(downMovePossible==true)							//If the new position is possible then we proceed. otherwise we store the shape.
 					{
 						if (ptrShape->y==20)
 							ptrShape->y = 0;
@@ -541,7 +534,7 @@ static void GamePlay()
 							}
 						}
 					}
-					else
+					else				//The movement was not possible so the shape is stored in this branch.
 					{
 						StoreShape(ptrShape);
 						tempNoOfLines = DeletePossibleLines();
@@ -559,11 +552,11 @@ static void GamePlay()
 								sendValue(tempNoOfLines);
 							}
 
-						if(!isGameOver())
+						if(!isGameOver())				//Check the game has ended.
 						 {
 							CreateNewShape();//if the game is not over then create a new shape.
 						 }
-						else
+						else // if the game has ended then initialize all variables to their default state and set the system state to game over state.
 						 {
 
 							if(getState()==stateGame2Player){
@@ -598,20 +591,20 @@ static void GamePlay()
 				}
 			else if(getState()==stateGameOver)
 			{
-				ResetGamePlay();
-				tempNoOfLines = 0;//reset temporary local variables within the task.
+				ResetGamePlay();				//Reset the variables holding the game play state e.g number of lines, score etc.
+				tempNoOfLines = 0;				//reset temporary local variables within the task.
 			}
 		}
 }
 
-/* -------------------------------------------
+/* -----------------------------------------------------------------------------------------------------------------------/
  *@desc: Draws the screen depending on the position of the shapes, state of the game and use of the buttons and joystick;
  *	 	 making use of the functions in the Draw.c file.
  *
  *@param:	- void parameters
  *
  *@return:	- void
- * ------------------------------------------- */
+ * ----------------------------------------------------------------------------------------------------------------------- */
 static void drawTask() {
 
 
@@ -631,7 +624,7 @@ static void drawTask() {
 
 		if(getState()==stateMainMenu)
 		{
-			DrawMainMenu(&gSelectionArrowPosition, &gPlayerMode, &gHighestScore);
+			DrawMainMenu(&gSelectionArrowPosition, &gHighestScore);
 		}
 		else if(getState()==stateGame1Player || getState()==stateGame2Player) {
 			DrawGameFrame(&gNextShape,gTotalNumberOfLinesCompleted,gGameScore,gDifficultyLevel,g2playerGameNoOfRoundsWon,
@@ -654,6 +647,27 @@ static void drawTask() {
 		// swap buffers
 		ESPL_DrawLayer();
 	}
+}
+
+
+
+/* ------------------------------------------------------------------/
+ *@desc: Inisialises the gNextShape with a new random shape.
+ *
+ *@param:	- void parameters
+ *
+ *@return:	- void
+ * ----------------------------------------------------------------------*/
+void InitializeNextShape()
+{
+	int randNo;
+	TM_RNG_Init();
+	randNo = TM_RNG_Get() & 0x1f;
+	while(randNo>27)
+	{
+		randNo = TM_RNG_Get() & 0x1f;
+	}
+	gNextShape = GetShape(randNo);
 }
 
 /* -------------------------------------------
@@ -718,7 +732,7 @@ void EXTI0_IRQHandler(void)//Button E interrupt handler
 		  if(EXTI_GetITStatus(EXTI_Line0) != RESET){
 			  /* Button E pauses the game */
 			  if(GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E)==0){
-				  if(getState()!=stateMainMenu || getState()!=stateGameOver) //Only pauses the game if we are in a gameplay state.
+				  if(getState()!=stateMainMenu && getState()!=stateGameOver) //Only pauses the game if we are in a game play state.
 				  {
 					  setState(stateGamePaused);
 				  	  debounce = 1; //The function is executed once so it will not be executed until the debouncing timer expires.
@@ -1008,7 +1022,7 @@ static void ReceiveValue()
 					checksum = buffer[4] ^ buffer[3] ^ buffer[2] ^ buffer[1];
 					if(checksum==buffer[5])		//Check for errors
 					{
-						gReceiving = (buffer[4]<<24) | (buffer[3]<<16) | (buffer[2]<<8) | (buffer[1]);
+						gValueReceivedFromUART = (buffer[4]<<24) | (buffer[3]<<16) | (buffer[2]<<8) | (buffer[1]);
 						pos = 0;
 					}
 					else
